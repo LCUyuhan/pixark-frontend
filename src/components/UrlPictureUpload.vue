@@ -27,6 +27,8 @@ interface Props {
   picture?: API.PictureVO
   /** 上传成功回调 */
   onSuccess?: (newPicture: API.PictureVO) => void
+  /** 目标空间 id（上传到私有空间时传入） */
+  spaceId?: number | string
 }
 
 const props = withDefaults(defineProps<Props>(), {})
@@ -42,8 +44,12 @@ const handleUpload = async () => {
   }
   loading.value = true
   try {
-    // 重新上传时携带已有图片 id
-    const res = await uploadPictureByUrl({ fileUrl: fileUrl.value, id: props.picture?.id })
+    // 重新上传时携带已有图片 id，上传到空间时携带 spaceId
+    const res = await uploadPictureByUrl({
+      fileUrl: fileUrl.value,
+      id: props.picture?.id,
+      spaceId: props.spaceId,
+    })
     if (res.data.code === 0 && res.data.data) {
       message.success('图片上传成功')
       props.onSuccess?.(res.data.data)

@@ -18,6 +18,10 @@ export async function uploadPicture(body: API.PictureUploadRequest, file: File) 
   if (body.id !== undefined && body.id !== null && body.id !== '') {
     formData.append('id', String(body.id))
   }
+  // 上传到私有空间时携带 spaceId
+  if (body.spaceId !== undefined && body.spaceId !== null && body.spaceId !== '') {
+    formData.append('spaceId', String(body.spaceId))
+  }
   return request.post<API.BaseResponse<API.PictureVO>>('/picture/upload', formData)
 }
 
@@ -51,22 +55,14 @@ export async function getPictureVOById(params: { id: number | string }) {
   return request.get<API.BaseResponse<API.PictureVO>>('/picture/get/vo', { params })
 }
 
-/** 分页获取图片列表（仅管理员）POST /picture/list/page */
+/** 分页获取图片原始实体列表（仅管理员；tags 为 JSON 字符串）POST /picture/list/page */
 export async function listPictureByPage(body: API.PictureQueryRequest) {
-  return request.post<API.BaseResponse<API.Page<API.PictureVO>>>('/picture/list/page', body)
+  return request.post<API.BaseResponse<API.Page<API.Picture>>>('/picture/list/page', body)
 }
 
 /** 分页获取图片列表（封装类，pageSize 最大 20）POST /picture/list/page/vo */
 export async function listPictureVOByPage(body: API.PictureQueryRequest) {
   return request.post<API.BaseResponse<API.Page<API.PictureVO>>>('/picture/list/page/vo', body)
-}
-
-/**
- * 分页获取图片列表（封装类，带缓存，pageSize 最大 20）POST /picture/list/page/vo/cache
- * 后端使用 Caffeine 本地缓存 + Redis 二级缓存，适用于首页等高频查询场景
- */
-export async function listPictureVOByPageWithCache(body: API.PictureQueryRequest) {
-  return request.post<API.BaseResponse<API.Page<API.PictureVO>>>('/picture/list/page/vo/cache', body)
 }
 
 /** 编辑图片（本人或管理员）POST /picture/edit */
@@ -82,4 +78,19 @@ export async function doPictureReview(body: API.PictureReviewRequest) {
 /** 获取图片标签分类列表 GET /picture/tag_category */
 export async function listPictureTagCategory() {
   return request.get<API.BaseResponse<API.PictureTagCategory>>('/picture/tag_category')
+}
+
+/** 以图搜图（站外相似图片，可能耗时数十秒）POST /picture/search/picture */
+export async function searchPictureByPicture(body: API.SearchPictureByPictureRequest) {
+  return request.post<API.BaseResponse<API.ImageSearchResult[]>>('/picture/search/picture', body)
+}
+
+/** 颜色搜索（空间内按主色调相似度前 12）POST /picture/search/color */
+export async function searchPictureByColor(body: API.SearchPictureByColorRequest) {
+  return request.post<API.BaseResponse<API.PictureVO[]>>('/picture/search/color', body)
+}
+
+/** 批量编辑图片（分类/标签/重命名，仅空间内）POST /picture/edit/batch */
+export async function editPictureByBatch(body: API.PictureEditByBatchRequest) {
+  return request.post<API.BaseResponse<boolean>>('/picture/edit/batch', body)
 }

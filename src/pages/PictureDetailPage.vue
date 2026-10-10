@@ -42,6 +42,15 @@
               <DownloadOutlined />
               免费下载
             </a-button>
+            <!-- 以图搜图：需登录（后端校验登录态） -->
+            <a-button v-if="isLoggedIn" @click="openImageSearch">
+              <SearchOutlined />
+              以图搜图
+            </a-button>
+            <a-button @click="openShare">
+              <ShareAltOutlined />
+              分享
+            </a-button>
             <!-- 仅本人或管理员可编辑/删除 -->
             <template v-if="canEdit">
               <a-button @click="doEdit">
@@ -59,6 +68,53 @@
         </a-col>
       </a-row>
     </a-card>
+
+    <!-- 以图搜图弹窗 -->
+    <a-modal v-model:open="showImageSearchModal" title="以图搜图（全网相似图片）" width="760px" :footer="null">
+      <a-space style="margin-bottom: 12px" wrap>
+        <span>搜索源：</span>
+        <a-radio-group v-model:value="searchProvider">
+          <a-radio-button value="baidu">百度</a-radio-button>
+          <a-radio-button value="aliyun">阿里</a-radio-button>
+        </a-radio-group>
+        <a-button type="primary" :loading="imageSearchLoading" @click="doImageSearch">开始搜索</a-button>
+      </a-space>
+      <a-alert
+        v-if="imageSearchLoading"
+        type="info"
+        show-icon
+        message="全网搜索中，可能需要数十秒，请耐心等待"
+        style="margin-bottom: 12px"
+      />
+      <a-list :grid="{ gutter: 12, column: 4 }" :data-source="imageSearchResults">
+        <template #renderItem="{ item }">
+          <a-list-item>
+            <a-card hoverable :body-style="{ padding: '8px' }">
+              <template #cover>
+                <!-- 点击图片区域：查看图片本身 -->
+                <a :href="item.imageUrl" target="_blank" rel="noopener noreferrer">
+                  <img :src="item.imageUrl" :alt="item.title ?? '相似图片'" class="search-thumb" />
+                </a>
+              </template>
+              <a-card-meta>
+                <template #description>{{ item.title ?? '-' }}</template>
+              </a-card-meta>
+              <template #actions>
+                <!-- 仅百度结果有来源页；阿里结果无 sourceUrl，不展示该入口 -->
+                <a v-if="item.sourceUrl" :href="item.sourceUrl" target="_blank" rel="noopener noreferrer">
+                  查看来源
+                </a>
+                <span v-else class="no-source">无来源页</span>
+              </template>
+            </a-card>
+          </a-list-item>
+        </template>
+      </a-list>
+      <a-empty v-if="searched && !imageSearchLoading && !imageSearchResults.length" description="未找到相似图片" />
+    </a-modal>
+
+    <!-- 分享弹窗 -->
+    <SharePictureModal v-model:open="shareOpen" :url="shareUrl" />
   </div>
 </template>
 
@@ -66,11 +122,18 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { EditOutlined, DeleteOutlined, DownloadOutlined } from '@ant-design/icons-vue'
+import {
+  EditOutlined,
+  DeleteOutlined,
+  DownloadOutlined,
+  SearchOutlined,
+  ShareAltOutlined,
+} from '@ant-design/icons-vue'
 import dayjs from 'dayjs'
-import { deletePicture, getPictureVOById } from '@/api/pictureController'
+import { deletePicture, getPictureVOById, searchPictureByPicture } from '@/api/pictureController'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import { downloadImage, formatSize } from '@/utils'
+import SharePictureModal from '@/components/SharePictureModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -78,6 +141,12 @@ const loginUserStore = useLoginUserStore()
 
 const picture = ref<API.PictureVO>({ id: '' })
 const loading = ref(true)
+
+/** 是否已登录 */
+const isLoggedIn = computed(() => {
+  const loginUser = loginUserStore.loginUser
+  return !!loginUser.id && loginUser.userRole !== 'notLogin'
+})
 
 /** 当前登录用户是否有编辑/删除权限（本人或管理员，对应后端校验逻辑） */
 const canEdit = computed(() => {
@@ -117,7 +186,7 @@ const fetchPicture = async () => {
 
 /** 跳转编辑页 */
 const doEdit = () => {
-  router.push(`/add_picture?id=${picture.value.id}`)
+  router.push(`/picture/edit/${picture.value.id}`)
 }
 
 /** 删除图片 */
@@ -135,6 +204,49 @@ const doDelete = async () => {
   }
 }
 
+// ===== 以图搜图 =====
+const showImageSearchModal = ref(false)
+const searchProvider = ref('baidu')
+const imageSearchLoading = ref(false)
+const imageSearchResults = ref<API.ImageSearchResult[]>([])
+const searched = ref(false)
+
+const openImageSearch = () => {
+  imageSearchResults.value = []
+  searched.value = false
+  showImageSearchModal.value = true
+}
+
+const doImageSearch = async () => {
+  imageSearchLoading.value = true
+  searched.value = false
+  try {
+    const res = await searchPictureByPicture({
+      pictureId: picture.value.id,
+      provider: searchProvider.value,
+    })
+    if (res.data.code === 0) {
+      imageSearchResults.value = res.data.data ?? []
+    } else {
+      message.error('以图搜图失败：' + res.data.message)
+    }
+  } catch (e: any) {
+    message.error('以图搜图失败：' + (e?.message ?? '网络错误'))
+  } finally {
+    imageSearchLoading.value = false
+    searched.value = true
+  }
+}
+
+// ===== 分享 =====
+const shareOpen = ref(false)
+const shareUrl = ref('')
+
+const openShare = () => {
+  shareUrl.value = `${window.location.origin}/picture/${picture.value.id}`
+  shareOpen.value = true
+}
+
 onMounted(() => {
   fetchPicture()
 })
@@ -144,5 +256,16 @@ onMounted(() => {
 .picture-detail-page {
   max-width: 1080px;
   margin: 0 auto;
+}
+
+.search-thumb {
+  width: 100%;
+  height: 140px;
+  object-fit: contain;
+  background: #fafafa;
+}
+
+.no-source {
+  color: rgba(0, 0, 0, 0.25);
 }
 </style>

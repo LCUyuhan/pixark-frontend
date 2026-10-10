@@ -30,9 +30,9 @@ export async function addUser(body: API.UserAddRequest) {
   return request.post<API.BaseResponse<number>>('/user/add', body)
 }
 
-/** 根据 id 获取用户（仅管理员）GET /user/get */
+/** 根据 id 获取用户原始实体（仅管理员；含密码哈希，勿直接渲染）GET /user/get */
 export async function getUserById(params: { id: number | string }) {
-  return request.get<API.BaseResponse<API.UserVO>>('/user/get', { params })
+  return request.get<API.BaseResponse<API.User>>('/user/get', { params })
 }
 
 /** 根据 id 获取脱敏用户信息 GET /user/get/vo */
@@ -48,6 +48,11 @@ export async function deleteUser(body: API.DeleteRequest) {
 /** 更新用户（仅管理员）POST /user/update */
 export async function updateUser(body: API.UserUpdateRequest) {
   return request.post<API.BaseResponse<boolean>>('/user/update', body)
+}
+
+/** 编辑个人信息（登录用户改自己）POST /user/edit */
+export async function editUser(body: API.UserEditRequest) {
+  return request.post<API.BaseResponse<boolean>>('/user/edit', body)
 }
 
 /** 分页获取用户列表（仅管理员）POST /user/list/page/vo */

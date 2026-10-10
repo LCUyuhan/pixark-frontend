@@ -23,6 +23,10 @@
         </a-space>
         <template #overlay>
           <a-menu>
+            <a-menu-item key="center" @click="router.push('/user/center')">
+              <UserOutlined />
+              个人中心
+            </a-menu-item>
             <a-menu-item key="logout" @click="doLogout">
               <LogoutOutlined />
               退出登录
@@ -40,7 +44,7 @@
 import { computed, h, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import { userLogout } from '@/api/userController'
 
@@ -49,13 +53,15 @@ const route = useRoute()
 const loginUserStore = useLoginUserStore()
 const loginUser = computed(() => loginUserStore.loginUser)
 
-// 菜单项（管理类菜单仅管理员可见，与后端接口权限一致）
+// 菜单项（管理类菜单仅管理员可见，与后端接口权限一致；我的空间仅普通用户可见）
 const originItems = [
   { key: '/', label: '主页', icon: () => h(HomeOutlined) },
   // 后端 /picture/upload 已对所有登录用户放开
   { key: '/add_picture', label: '创建图片', icon: () => h(PlusOutlined) },
+  { key: '/my_spaces', label: '我的空间', icon: () => h(FolderOutlined), hideForAdmin: true },
   { key: '/admin/userManage', label: '用户管理', icon: () => h(UserOutlined), needAdmin: true },
   { key: '/admin/pictureManage', label: '图片管理', icon: () => h(PictureOutlined), needAdmin: true },
+  { key: '/admin/spaceManage', label: '空间管理', icon: () => h(DatabaseOutlined), needAdmin: true },
   // 后端 /picture/upload/batch 仅管理员可用
   { key: '/admin/addPictureBatch', label: '批量创建图片', icon: () => h(CloudUploadOutlined), needAdmin: true },
 ]
@@ -65,6 +71,9 @@ const menuItems = computed(() =>
   originItems.filter((item) => {
     if (item.needAdmin) {
       return loginUser.value.userRole === 'admin'
+    }
+    if (item.hideForAdmin) {
+      return loginUser.value.userRole !== 'admin'
     }
     return true
   }),

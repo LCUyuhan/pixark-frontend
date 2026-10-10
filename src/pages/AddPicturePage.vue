@@ -3,8 +3,13 @@
     <a-card :title="pictureId ? '编辑图片' : '创建图片'">
       <a-row :gutter="[24, 24]">
         <!-- 图片上传（后端 /picture/upload 与 /picture/upload/url 登录即可使用） -->
+        <!-- 左栏：编辑模式只读预览；创建模式上传 -->
         <a-col :xs="24" :md="10">
-          <a-tabs v-model:active-key="uploadType">
+          <div v-if="pictureId" class="edit-preview">
+            <a-image :src="picture?.url" alt="图片预览" style="max-width: 100%" />
+            <div class="preview-tip">编辑模式仅修改图片信息，如需换图请删除后重新上传</div>
+          </div>
+          <a-tabs v-else v-model:active-key="uploadType">
             <a-tab-pane key="file" tab="文件上传">
               <PictureUpload :picture="picture" :on-success="onUploadSuccess" />
             </a-tab-pane>
@@ -75,8 +80,8 @@ import {
 const route = useRoute()
 const router = useRouter()
 
-// 编辑场景：地址栏携带 id
-const pictureId = computed(() => route.query.id as string | undefined)
+// 编辑场景：路由 /picture/edit/:id 携带 id
+const pictureId = computed(() => route.params.id as string | undefined)
 
 // 上传方式：文件上传 / URL 上传
 const uploadType = ref<'file' | 'url'>('file')
@@ -169,5 +174,15 @@ onMounted(() => {
 .add-picture-page {
   max-width: 960px;
   margin: 0 auto;
+}
+
+.edit-preview {
+  text-align: center;
+}
+
+.preview-tip {
+  margin-top: 8px;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 12px;
 }
 </style>

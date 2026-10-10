@@ -19,6 +19,17 @@ router.beforeEach(async (to, from, next) => {
 
   const loginUser = loginUserStore.loginUser
   const needAccess = (to.meta?.access as string) ?? null
+  const userOnly = to.meta?.userOnly === true
+  const loginRequired = to.meta?.loginRequired === true
+
+  // 需要登录的页面
+  if (loginRequired) {
+    if (!loginUser.id || loginUser.userRole === 'notLogin') {
+      message.warning('请先登录')
+      next(`/user/login?redirect=${to.fullPath}`)
+      return
+    }
+  }
 
   // 需要管理员权限的页面
   if (needAccess === 'admin') {
@@ -31,6 +42,19 @@ router.beforeEach(async (to, from, next) => {
     // 已登录但非管理员：跳转无权限页
     if (loginUser.userRole !== 'admin') {
       next('/noAuth')
+      return
+    }
+  }
+
+  // 仅普通用户可访问的页面（管理员无个人空间）
+  if (userOnly) {
+    if (!loginUser.id || loginUser.userRole === 'notLogin') {
+      message.warning('请先登录')
+      next(`/user/login?redirect=${to.fullPath}`)
+      return
+    }
+    if (loginUser.userRole === 'admin') {
+      next('/admin/spaceManage')
       return
     }
   }

@@ -102,6 +102,42 @@ declare namespace API {
     userRole?: string
   }
 
+  /** 用户实体（后端原始实体，仅管理员接口返回，含密码哈希，切勿直接渲染） */
+  type User = {
+    /** 用户 id */
+    id: number | string
+    /** 账号 */
+    userAccount?: string
+    /** 密码哈希（敏感，仅限管理端） */
+    userPassword?: string
+    /** 用户昵称 */
+    userName?: string
+    /** 用户头像 */
+    userAvatar?: string
+    /** 用户简介 */
+    userProfile?: string
+    /** 用户角色：user/admin/ban */
+    userRole?: string
+    /** 创建时间 */
+    createTime?: string
+    /** 编辑时间 */
+    editTime?: string
+    /** 更新时间 */
+    updateTime?: string
+    /** 是否删除：0-未删除 */
+    isDelete?: number
+  }
+
+  /** 用户编辑请求（登录用户改自己的信息，不含账号/密码/角色） */
+  type UserEditRequest = {
+    /** 用户昵称 */
+    userName?: string
+    /** 用户头像 */
+    userAvatar?: string
+    /** 用户简介 */
+    userProfile?: string
+  }
+
   /** 登录用户视图（脱敏） */
   type LoginUserVO = {
     /** 用户 id */
@@ -150,6 +186,8 @@ declare namespace API {
     fileUrl?: string
     /** 图片名称 */
     picName?: string
+    /** 目标空间 id，不传则为公共图库 */
+    spaceId?: number | string
   }
 
   /** 图片审核请求（仅管理员） */
@@ -240,6 +278,14 @@ declare namespace API {
     reviewMessage?: string
     /** 审核人 id */
     reviewerId?: number | string
+    /** 空间 id */
+    spaceId?: number | string
+    /** 是否只查 spaceId 为 null 的公共图库数据 */
+    nullSpaceId?: boolean
+    /** 开始编辑时间 */
+    startEditTime?: string
+    /** 结束编辑时间 */
+    endEditTime?: string
   }
 
   /** 图片视图（脱敏） */
@@ -268,8 +314,12 @@ declare namespace API {
     picScale?: number
     /** 图片格式 */
     picFormat?: string
+    /** 图片主色调（十六进制，如 0xFF0000） */
+    picColor?: string
     /** 用户 id */
     userId?: number | string
+    /** 空间 id */
+    spaceId?: number | string
     /** 审核状态：0-待审核, 1-通过, 2-拒绝 */
     reviewStatus?: number
     /** 审核信息 */
@@ -288,11 +338,193 @@ declare namespace API {
     user?: UserVO
   }
 
+  /** 图片实体（后端原始实体，仅管理员接口返回；tags 为 JSON 字符串，非数组） */
+  type Picture = {
+    /** id */
+    id: number | string
+    /** 图片 url */
+    url?: string
+    /** 缩略图 url */
+    thumbnailUrl?: string
+    /** 图片名称 */
+    name?: string
+    /** 简介 */
+    introduction?: string
+    /** 标签（JSON 字符串） */
+    tags?: string
+    /** 分类 */
+    category?: string
+    /** 文件体积 */
+    picSize?: number | string
+    /** 图片宽度 */
+    picWidth?: number
+    /** 图片高度 */
+    picHeight?: number
+    /** 图片比例 */
+    picScale?: number
+    /** 图片格式 */
+    picFormat?: string
+    /** 图片主色调 */
+    picColor?: string
+    /** 用户 id */
+    userId?: number | string
+    /** 空间 id */
+    spaceId?: number | string
+    /** 审核状态：0-待审核, 1-通过, 2-拒绝 */
+    reviewStatus?: number
+    /** 审核信息 */
+    reviewMessage?: string
+    /** 审核人 id */
+    reviewerId?: number | string
+    /** 审核时间 */
+    reviewTime?: string
+    /** 创建时间 */
+    createTime?: string
+    /** 编辑时间 */
+    editTime?: string
+    /** 更新时间 */
+    updateTime?: string
+    /** 是否删除：0-未删除 */
+    isDelete?: number
+  }
+
   /** 图片标签分类视图 */
   type PictureTagCategory = {
     /** 标签列表 */
     tagList: string[]
     /** 分类列表 */
     categoryList: string[]
+  }
+
+  /** 以图搜图结果（站外相似图片） */
+  type ImageSearchResult = {
+    /** 可直接展示的图片地址 */
+    imageUrl?: string
+    /** 来源页地址 */
+    sourceUrl?: string
+    /** 标题/图注 */
+    title?: string
+  }
+
+  /** 以图搜图请求 */
+  type SearchPictureByPictureRequest = {
+    /** 站内图片 id */
+    pictureId: number | string
+    /** 供应商：baidu / aliyun，留空用后端默认 */
+    provider?: string
+  }
+
+  /** 颜色搜索请求 */
+  type SearchPictureByColorRequest = {
+    /** 目标颜色（#RRGGBB 或 0xRRGGBB） */
+    picColor: string
+    /** 空间 id */
+    spaceId: number | string
+  }
+
+  /** 批量编辑图片请求（仅空间内） */
+  type PictureEditByBatchRequest = {
+    /** 图片 id 列表 */
+    pictureIdList: (number | string)[]
+    /** 空间 id */
+    spaceId: number | string
+    /** 分类（可选） */
+    category?: string
+    /** 标签（可选） */
+    tags?: string[]
+    /** 命名规则（可选，支持 {序号} 占位） */
+    nameRule?: string
+  }
+
+  // -------------------- 空间模块 --------------------
+
+  /** 空间创建请求 */
+  type SpaceAddRequest = {
+    /** 空间名称 */
+    spaceName?: string
+    /** 空间级别：0-普通版 1-专业版 2-旗舰版 */
+    spaceLevel?: number
+  }
+
+  /** 空间编辑请求（用户，仅可改名称） */
+  type SpaceEditRequest = {
+    /** 空间 id */
+    id: number | string
+    /** 空间名称 */
+    spaceName?: string
+  }
+
+  /** 空间更新请求（管理员，可改名称/级别/限额） */
+  type SpaceUpdateRequest = {
+    /** 空间 id */
+    id: number | string
+    /** 空间名称 */
+    spaceName?: string
+    /** 空间级别：0-普通版 1-专业版 2-旗舰版 */
+    spaceLevel?: number
+    /** 图片最大总大小（字节） */
+    maxSize?: number
+    /** 图片最大数量 */
+    maxCount?: number
+  }
+
+  /** 空间级别信息 */
+  type SpaceLevel = {
+    /** 级别值：0/1/2 */
+    value: number
+    /** 级别名称 */
+    text: string
+    /** 最大图片数量 */
+    maxCount: number
+    /** 最大图片总大小（字节） */
+    maxSize: number
+  }
+
+  /** 空间查询请求 */
+  type SpaceQueryRequest = {
+    /** 空间 id */
+    id?: number | string
+    /** 用户 id */
+    userId?: number | string
+    /** 空间名称 */
+    spaceName?: string
+    /** 空间级别：0-普通版 1-专业版 2-旗舰版 */
+    spaceLevel?: number
+    /** 当前页 */
+    current?: number
+    /** 每页大小 */
+    pageSize?: number
+    /** 排序字段 */
+    sortField?: string
+    /** 排序顺序 */
+    sortOrder?: string
+  }
+
+  /** 空间视图（脱敏） */
+  type SpaceVO = {
+    /** 空间 id */
+    id: number | string
+    /** 空间名称 */
+    spaceName?: string
+    /** 空间级别：0-普通版 1-专业版 2-旗舰版 */
+    spaceLevel?: number
+    /** 图片最大总大小（字节） */
+    maxSize?: number
+    /** 图片最大数量 */
+    maxCount?: number
+    /** 当前图片总大小（字节） */
+    totalSize?: number
+    /** 当前图片数量 */
+    totalCount?: number
+    /** 创建用户 id */
+    userId?: number | string
+    /** 创建时间 */
+    createTime?: string
+    /** 编辑时间 */
+    editTime?: string
+    /** 更新时间 */
+    updateTime?: string
+    /** 创建用户信息 */
+    user?: UserVO
   }
 }

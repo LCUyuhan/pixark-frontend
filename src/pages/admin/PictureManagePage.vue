@@ -164,7 +164,8 @@ const searchParams = reactive<API.PictureQueryRequest>({
   sortOrder: 'descend',
 })
 
-const dataList = ref<API.PictureVO[]>([])
+// 管理端接口返回的是 Picture 原始实体（tags 为 JSON 字符串，展示时做兼容解析）
+const dataList = ref<API.Picture[]>([])
 const total = ref(0)
 const loading = ref(false)
 
@@ -230,7 +231,7 @@ const reviewStatusColor = (status?: number) => {
 }
 
 /** 审核图片（通过 / 拒绝） */
-const doReview = async (record: API.PictureVO, reviewStatus: number) => {
+const doReview = async (record: API.Picture, reviewStatus: number) => {
   const reviewMessage =
     reviewStatus === PIC_REVIEW_STATUS_ENUM.PASS ? '管理员操作通过' : '管理员操作拒绝'
   try {
@@ -248,7 +249,7 @@ const doReview = async (record: API.PictureVO, reviewStatus: number) => {
 
 /** 跳转编辑页 */
 const doEdit = (id: number | string) => {
-  router.push(`/add_picture?id=${id}`)
+  router.push(`/picture/edit/${id}`)
 }
 
 /** 删除图片 */

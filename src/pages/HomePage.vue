@@ -74,7 +74,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { listPictureTagCategory, listPictureVOByPageWithCache } from '@/api/pictureController'
+import { listPictureTagCategory, listPictureVOByPage } from '@/api/pictureController'
 
 const router = useRouter()
 
@@ -120,7 +120,7 @@ const fetchData = async () => {
       category: activeCategory.value === 'all' ? undefined : activeCategory.value,
       tags: tagList.value.filter((_, index) => selectedTagMap.value[index]),
     }
-    const res = await listPictureVOByPageWithCache(params)
+    const res = await listPictureVOByPage(params)
     if (res.data.code === 0 && res.data.data) {
       dataList.value = res.data.data.records ?? []
       total.value = Number(res.data.data.total ?? 0)

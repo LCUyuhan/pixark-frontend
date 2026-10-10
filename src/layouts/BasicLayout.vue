@@ -4,7 +4,8 @@
       <GlobalHeader />
     </a-layout-header>
     <a-layout-content class="content">
-      <router-view />
+      <!-- key 绑定路由 path：同组件跨路由（如 创建/编辑图片）切换时强制重新挂载，避免旧状态残留 -->
+      <router-view :key="route.path" />
     </a-layout-content>
     <a-layout-footer class="footer">
       智能协同云图库
@@ -13,7 +14,10 @@
 </template>
 
 <script setup lang="ts">
+import { useRoute } from 'vue-router'
 import GlobalHeader from '@/components/GlobalHeader.vue'
+
+const route = useRoute()
 </script>
 
 <style scoped>

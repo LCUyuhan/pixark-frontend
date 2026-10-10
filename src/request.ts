@@ -24,7 +24,7 @@ request.interceptors.response.use(
         !window.location.pathname.includes('/user/login')
       ) {
         message.warning('请先登录')
-        window.location.href = `/user/login?redirect=${window.location.pathname}`
+        window.location.href = `/user/login?redirect=${encodeURIComponent(window.location.pathname)}`
       }
       return Promise.reject(data)
     }
