@@ -55,6 +55,13 @@ export async function editUser(body: API.UserEditRequest) {
   return request.post<API.BaseResponse<boolean>>('/user/edit', body)
 }
 
+/** 上传用户头像（需登录，返回完整图片 URL）POST /user/avatar/upload */
+export async function uploadAvatar(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request.post<API.BaseResponse<string>>('/user/avatar/upload', formData)
+}
+
 /** 分页获取用户列表（仅管理员）POST /user/list/page/vo */
 export async function listUserVOByPage(body: API.UserQueryRequest) {
   return request.post<API.BaseResponse<API.Page<API.UserVO>>>('/user/list/page/vo', body)
