@@ -108,6 +108,16 @@
         <a-form-item label="角色">
           <a-select v-model:value="editForm.userRole" :options="roleOptions" />
         </a-form-item>
+        <a-form-item label="AI 编辑额度（剩余次数）">
+          <a-input-number
+            v-model:value="editForm.aiQuota"
+            :min="0"
+            :precision="0"
+            style="width: 100%"
+            placeholder="留空表示不修改"
+          />
+          <div class="field-tip">用户额度用完会看到「请联系管理员发放」，在这里填新的剩余次数即可，不会按天自动重置</div>
+        </a-form-item>
       </a-form>
     </a-modal>
   </div>
@@ -137,6 +147,7 @@ const columns = [
   { title: '昵称', dataIndex: 'userName' },
   { title: '简介', dataIndex: 'userProfile', ellipsis: true },
   { title: '角色', dataIndex: 'userRole', width: 100 },
+  { title: 'AI 额度', dataIndex: 'aiQuota', width: 90 },
   { title: '创建时间', dataIndex: 'createTime', width: 170 },
   { title: '操作', key: 'action', width: 150 },
 ]
@@ -241,6 +252,8 @@ const openEditModal = (record: API.UserVO) => {
   editForm.userAvatar = record.userAvatar
   editForm.userProfile = record.userProfile
   editForm.userRole = record.userRole
+  // 必须回填真实额度：留空后端才会跳过该字段，填 0 等于把用户额度清零
+  editForm.aiQuota = record.aiQuota
   editModalOpen.value = true
 }
 
@@ -288,5 +301,11 @@ onMounted(() => {
 .user-manage-page {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.field-tip {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  line-height: 1.6;
 }
 </style>

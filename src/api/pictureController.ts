@@ -94,3 +94,33 @@ export async function searchPictureByColor(body: API.SearchPictureByColorRequest
 export async function editPictureByBatch(body: API.PictureEditByBatchRequest) {
   return request.post<API.BaseResponse<boolean>>('/picture/edit/batch', body)
 }
+
+/** 创建 AI 图片编辑任务（只支持异步，需轮询查询接口）POST /picture/ai/edit/create_task */
+export async function createAiImageEditTask(body: API.AiImageEditCreateRequest) {
+  return request.post<API.BaseResponse<API.AiImageEditTaskVO>>('/picture/ai/edit/create_task', body)
+}
+
+/** 查询 AI 图片编辑任务进度（仅任务提交人可查）GET /picture/ai/edit/get_task */
+export async function getAiImageEditTask(params: { taskId: string }) {
+  return request.get<API.BaseResponse<API.AiImageEditTaskVO>>('/picture/ai/edit/get_task', { params })
+}
+
+/** 保存 AI 图片编辑结果，replace 为 true 时覆盖原图 POST /picture/ai/edit/save */
+export async function saveAiImageEditResult(body: API.AiImageEditSaveRequest) {
+  return request.post<API.BaseResponse<API.PictureVO>>('/picture/ai/edit/save', body)
+}
+
+/** 查询当前用户的 AI 编辑额度余量 GET /picture/ai/edit/quota */
+export async function getAiImageEditQuota() {
+  return request.get<API.BaseResponse<API.AiImageEditQuotaVO>>('/picture/ai/edit/quota')
+}
+
+/** 查询风格化功能的预设风格清单 GET /picture/ai/edit/styles */
+export async function listAiImageEditStyles(params: { function?: string }) {
+  return request.get<API.BaseResponse<API.AiImageEditStyleVO[]>>('/picture/ai/edit/styles', { params })
+}
+
+/** 取原图 base64 底图，供本地画布画涂抹蒙版（只读、不消耗日额度）GET /picture/ai/edit/base_image */
+export async function getAiImageEditBaseImage(params: { pictureId: number | string }) {
+  return request.get<API.BaseResponse<API.AiImageEditBaseImageVO>>('/picture/ai/edit/base_image', { params })
+}

@@ -47,7 +47,13 @@
               <SearchOutlined />
               以图搜图
             </a-button>
-            <a-button @click="openShare">
+            <!-- AI 编辑：后端用 checkPictureAuth 校验，口径与下面的编辑/删除一致 -->
+            <a-button v-if="canEdit" @click="aiEditOpen = true">
+              <RobotOutlined />
+              AI 编辑
+            </a-button>
+            <!-- 分享：空间图受 checkPictureAuth 保护，别人打不开，只对公共图库开放 -->
+            <a-button v-if="!picture.spaceId" @click="openShare">
               <ShareAltOutlined />
               分享
             </a-button>
@@ -72,12 +78,8 @@
     <!-- 以图搜图弹窗 -->
     <a-modal v-model:open="showImageSearchModal" title="以图搜图（全网相似图片）" width="760px" :footer="null">
       <a-space style="margin-bottom: 12px" wrap>
-        <span>搜索源：</span>
-        <a-radio-group v-model:value="searchProvider">
-          <a-radio-button value="baidu">百度</a-radio-button>
-          <a-radio-button value="aliyun">阿里</a-radio-button>
-        </a-radio-group>
         <a-button type="primary" :loading="imageSearchLoading" @click="doImageSearch">开始搜索</a-button>
+        <span class="search-tip">走百度识图，单次可能需要数十秒</span>
       </a-space>
       <a-alert
         v-if="imageSearchLoading"
@@ -115,6 +117,14 @@
 
     <!-- 分享弹窗 -->
     <SharePictureModal v-model:open="shareOpen" :url="shareUrl" />
+
+    <!-- AI 编辑弹窗 -->
+    <AiImageEditModal
+      v-model:open="aiEditOpen"
+      :picture="picture"
+      :allow-replace="!!picture.spaceId"
+      @saved="onAiEditSaved"
+    />
   </div>
 </template>
 
@@ -126,6 +136,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   DownloadOutlined,
+  RobotOutlined,
   SearchOutlined,
   ShareAltOutlined,
 } from '@ant-design/icons-vue'
@@ -133,6 +144,7 @@ import dayjs from 'dayjs'
 import { deletePicture, getPictureVOById, searchPictureByPicture } from '@/api/pictureController'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import { downloadImage, formatSize } from '@/utils'
+import AiImageEditModal from '@/components/AiImageEditModal.vue'
 import SharePictureModal from '@/components/SharePictureModal.vue'
 
 const route = useRoute()
@@ -195,7 +207,9 @@ const doDelete = async () => {
     const res = await deletePicture({ id: picture.value.id })
     if (res.data.code === 0) {
       message.success('删除成功')
-      router.push('/')
+      // 空间图删完回到它所属的空间列表，公共图库才回首页
+      const spaceId = picture.value.spaceId
+      router.push(spaceId ? `/space/${spaceId}` : '/')
     } else {
       message.error('删除失败：' + res.data.message)
     }
@@ -206,7 +220,6 @@ const doDelete = async () => {
 
 // ===== 以图搜图 =====
 const showImageSearchModal = ref(false)
-const searchProvider = ref('baidu')
 const imageSearchLoading = ref(false)
 const imageSearchResults = ref<API.ImageSearchResult[]>([])
 const searched = ref(false)
@@ -221,10 +234,7 @@ const doImageSearch = async () => {
   imageSearchLoading.value = true
   searched.value = false
   try {
-    const res = await searchPictureByPicture({
-      pictureId: picture.value.id,
-      provider: searchProvider.value,
-    })
+    const res = await searchPictureByPicture({ pictureId: picture.value.id })
     if (res.data.code === 0) {
       imageSearchResults.value = res.data.data ?? []
     } else {
@@ -247,6 +257,17 @@ const openShare = () => {
   shareOpen.value = true
 }
 
+// ===== AI 编辑 =====
+const aiEditOpen = ref(false)
+
+const onAiEditSaved = (payload: { picture?: API.PictureVO; replaced: boolean }) => {
+  if (payload.replaced || !payload.picture?.id) {
+    fetchPicture()
+    return
+  }
+  router.push(`/picture/${payload.picture.id}`)
+}
+
 onMounted(() => {
   fetchPicture()
 })
@@ -263,6 +284,11 @@ onMounted(() => {
   height: 140px;
   object-fit: contain;
   background: #fafafa;
+}
+
+.search-tip {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 12px;
 }
 
 .no-source {

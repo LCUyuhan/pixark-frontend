@@ -1,9 +1,9 @@
 <template>
   <div class="add-picture-page">
-    <a-card :title="pictureId ? '编辑图片' : '创建图片'">
+    <a-card :title="pictureId ? '编辑图片' : spaceId ? '上传图片到空间' : '创建图片'">
       <a-row :gutter="[24, 24]">
         <!-- 图片上传（后端 /picture/upload 与 /picture/upload/url 登录即可使用） -->
-        <!-- 左栏：编辑模式只读预览；创建模式上传 -->
+        <!-- 左栏：编辑模式只读预览；创建模式上传（带 ?spaceId= 即上传到该空间） -->
         <a-col :xs="24" :md="10">
           <div v-if="pictureId" class="edit-preview">
             <a-image :src="picture?.url" alt="图片预览" style="max-width: 100%" />
@@ -11,10 +11,16 @@
           </div>
           <a-tabs v-else v-model:active-key="uploadType">
             <a-tab-pane key="file" tab="文件上传">
-              <PictureUpload :picture="picture" :on-success="onUploadSuccess" />
+              <PictureUpload
+                :picture="picture"
+                :space-id="spaceId"
+                :file="localFile"
+                :on-file-select="onFileSelect"
+                :on-success="onUploadSuccess"
+              />
             </a-tab-pane>
             <a-tab-pane key="url" tab="URL 上传" force-render>
-              <UrlPictureUpload :picture="picture" :on-success="onUploadSuccess" />
+              <UrlPictureUpload :picture="picture" :space-id="spaceId" :on-success="onUrlUploadSuccess" />
             </a-tab-pane>
           </a-tabs>
         </a-col>
@@ -82,12 +88,16 @@ const router = useRouter()
 
 // 编辑场景：路由 /picture/edit/:id 携带 id
 const pictureId = computed(() => route.params.id as string | undefined)
+// 空间场景：/add_picture?spaceId=xxx 由空间页「+ 上传图片」跳过来，上传与额度都落到该空间
+const spaceId = computed(() => (route.query.spaceId as string) || undefined)
 
 // 上传方式：文件上传 / URL 上传
 const uploadType = ref<'file' | 'url'>('file')
 
 const picture = ref<API.PictureVO>()
 const submitLoading = ref(false)
+/** 基础编辑（裁剪/旋转）的源文件：只有本地选中的那份能进 canvas，URL 上传拿不到字节 */
+const localFile = ref<File>()
 
 // 表单数据（对应后端 PictureEditRequest）
 const pictureForm = reactive<API.PictureEditRequest>({
@@ -141,6 +151,16 @@ const onUploadSuccess = (newPicture: API.PictureVO) => {
   }
 }
 
+const onFileSelect = (file: File) => {
+  localFile.value = file
+}
+
+/** URL 上传后本地文件已不是当前这张图的来源，必须清掉，否则「编辑图片」会拿旧文件覆盖新图 */
+const onUrlUploadSuccess = (newPicture: API.PictureVO) => {
+  localFile.value = undefined
+  onUploadSuccess(newPicture)
+}
+
 /** 提交表单（编辑图片信息） */
 const handleSubmit = async (values: API.PictureEditRequest) => {
   const id = picture.value?.id ?? pictureId.value
@@ -153,6 +173,11 @@ const handleSubmit = async (values: API.PictureEditRequest) => {
     const res = await editPicture({ ...values, id })
     if (res.data.code === 0) {
       message.success(pictureId.value ? '图片信息已保存' : '图片创建成功')
+      // 空间上传后回到空间列表，方便继续传下一张
+      if (spaceId.value) {
+        router.push(`/space/${spaceId.value}`)
+        return
+      }
       router.push(`/picture/${id}`)
     } else {
       message.error('操作失败：' + res.data.message)

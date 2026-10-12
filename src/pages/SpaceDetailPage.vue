@@ -9,7 +9,7 @@
           <a-tag :color="levelColor(space.spaceLevel)">{{ levelText(space.spaceLevel) }}</a-tag>
         </a-space>
         <a-space wrap>
-          <a-button type="primary" @click="showUploadModal = true">+ 上传图片</a-button>
+          <a-button type="primary" @click="goUploadPage">+ 上传图片</a-button>
           <a-button @click="toggleBatchMode">{{ batchMode ? '退出批量' : '批量管理' }}</a-button>
           <a-button @click="showSearch = !showSearch">{{ showSearch ? '收起搜索' : '搜索' }}</a-button>
           <a-button @click="doEdit">改名</a-button>
@@ -100,7 +100,9 @@
         <span>已选 {{ selectedIds.length }} 项</span>
         <a-button type="primary" :disabled="!selectedIds.length" @click="openBatchEdit">批量改信息</a-button>
         <a-button :disabled="!selectedIds.length" @click="openBatchRename">批量重命名</a-button>
-        <a-button :disabled="!selectedIds.length" @click="selectedIds = []">取消选择</a-button>
+        <a-button :disabled="!dataList.length" @click="toggleSelectPage">
+          {{ allPageSelected ? '取消本页' : '全选本页' }}
+        </a-button>
       </a-space>
     </a-card>
 
@@ -154,9 +156,9 @@
                   </div>
                 </template>
                 <a-card-meta :title="item.name" />
-                <template v-if="!batchMode" #actions>
-                  <span class="card-action" title="分享" @click.stop="openShare(item)">
-                    <ShareAltOutlined />
+                <template v-if="!batchMode && canAiEdit(item)" #actions>
+                  <span class="card-action" title="AI 编辑" @click.stop="openAiEdit(item)">
+                    <RobotOutlined />
                   </span>
                 </template>
               </a-card>
@@ -174,18 +176,6 @@
         @change="fetchPictures"
       />
     </template>
-
-    <!-- 上传弹窗（携带 spaceId） -->
-    <a-modal v-model:open="showUploadModal" title="上传图片到空间" width="640px" :footer="null">
-      <a-tabs v-model:active-key="uploadType">
-        <a-tab-pane key="file" tab="文件上传">
-          <PictureUpload :space-id="spaceId" :on-success="onUploadSuccess" />
-        </a-tab-pane>
-        <a-tab-pane key="url" tab="URL 上传" force-render>
-          <UrlPictureUpload :space-id="spaceId" :on-success="onUploadSuccess" />
-        </a-tab-pane>
-      </a-tabs>
-    </a-modal>
 
     <!-- 改名弹窗 -->
     <a-modal v-model:open="showEditModal" title="修改空间名称" @ok="handleEdit">
@@ -233,8 +223,8 @@
       </a-form>
     </a-modal>
 
-    <!-- 分享弹窗 -->
-    <SharePictureModal v-model:open="shareOpen" :url="shareUrl" />
+    <!-- AI 编辑弹窗（卡片操作栏点击后针对该图） -->
+    <AiImageEditModal v-model:open="aiEditOpen" :picture="aiEditPicture" @saved="onAiEditSaved" />
   </div>
 </template>
 
@@ -242,12 +232,11 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { FolderOutlined, ShareAltOutlined } from '@ant-design/icons-vue'
+import { FolderOutlined, RobotOutlined } from '@ant-design/icons-vue'
 import dayjs, { type Dayjs } from 'dayjs'
-import PictureUpload from '@/components/PictureUpload.vue'
-import UrlPictureUpload from '@/components/UrlPictureUpload.vue'
-import SharePictureModal from '@/components/SharePictureModal.vue'
+import AiImageEditModal from '@/components/AiImageEditModal.vue'
 import { formatSize } from '@/utils'
+import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import {
   editPictureByBatch,
   listPictureTagCategory,
@@ -258,6 +247,7 @@ import { deleteSpace, editSpace, listSpaceByPage, listSpaceLevels } from '@/api/
 
 const route = useRoute()
 const router = useRouter()
+const loginUserStore = useLoginUserStore()
 
 const spaceId = computed(() => route.params.id as string)
 const space = ref<API.SpaceVO>()
@@ -405,6 +395,24 @@ const toggleSelect = (id: number | string) => {
   }
 }
 
+const pageIds = computed(() => dataList.value.map((item) => item.id))
+const allPageSelected = computed(
+  () => pageIds.value.length > 0 && pageIds.value.every((id) => selectedIds.value.includes(id)),
+)
+
+/** 翻页不会清空已选（支持跨页批量），所以这里只增删本页的 id，其他页的选择保留 */
+const toggleSelectPage = () => {
+  if (allPageSelected.value) {
+    selectedIds.value = selectedIds.value.filter((id) => !pageIds.value.includes(id))
+    return
+  }
+  pageIds.value.forEach((id) => {
+    if (!selectedIds.value.includes(id)) {
+      selectedIds.value.push(id)
+    }
+  })
+}
+
 const doClickPicture = (item: API.PictureVO) => {
   if (batchMode.value) {
     toggleSelect(item.id)
@@ -477,13 +485,26 @@ const handleBatchRename = async () => {
   }
 }
 
-// ===== 分享 =====
-const shareOpen = ref(false)
-const shareUrl = ref('')
+// ===== AI 编辑 =====
+const aiEditOpen = ref(false)
+const aiEditPicture = ref<API.PictureVO>({ id: '' })
 
-const openShare = (item: API.PictureVO) => {
-  shareUrl.value = `${window.location.origin}/picture/${item.id}`
-  shareOpen.value = true
+/** 后端 checkPictureAuth 对空间图只认图片归属人，管理员也不放行，这里按同一口径显示入口 */
+const canAiEdit = (item: API.PictureVO) =>
+  !!loginUserStore.loginUser.id && String(item.userId) === String(loginUserStore.loginUser.id)
+
+const openAiEdit = (item: API.PictureVO) => {
+  aiEditPicture.value = item
+  aiEditOpen.value = true
+}
+
+const onAiEditSaved = (payload: { picture?: API.PictureVO; replaced: boolean }) => {
+  if (payload.replaced || !payload.picture?.id) {
+    fetchSpace()
+    fetchPictures()
+    return
+  }
+  router.push(`/picture/${payload.picture.id}`)
 }
 
 // ===== 空间信息 / 上传 / 改名 / 删除 =====
@@ -514,12 +535,9 @@ const fetchLevels = async () => {
   }
 }
 
-const showUploadModal = ref(false)
-const uploadType = ref<'file' | 'url'>('file')
-
-const onUploadSuccess = () => {
-  fetchSpace()
-  fetchPictures()
+/** 上传复用创建页那套两段式流程，spaceId 用查询参数带过去 */
+const goUploadPage = () => {
+  router.push(`/add_picture?spaceId=${spaceId.value}`)
 }
 
 const showEditModal = ref(false)

@@ -78,6 +78,8 @@ declare namespace API {
     userProfile?: string
     /** 用户角色：user/admin */
     userRole?: string
+    /** AI 图片编辑剩余额度（次数），留空则不修改 */
+    aiQuota?: number
   }
 
   /** 用户查询请求（仅管理员，含分页参数） */
@@ -172,6 +174,8 @@ declare namespace API {
     userProfile?: string
     /** 用户角色：user/admin */
     userRole?: string
+    /** AI 图片编辑剩余额度（次数），管理员可发放 */
+    aiQuota?: number
     /** 创建时间 */
     createTime?: string
   }
@@ -410,7 +414,7 @@ declare namespace API {
   type SearchPictureByPictureRequest = {
     /** 站内图片 id */
     pictureId: number | string
-    /** 供应商：baidu / aliyun，留空用后端默认 */
+    /** 供应商：目前后端只保留 baidu，留空即用其默认服务商 */
     provider?: string
   }
 
@@ -434,6 +438,88 @@ declare namespace API {
     tags?: string[]
     /** 命名规则（可选，支持 {序号} 占位） */
     nameRule?: string
+  }
+
+  /** AI 图片编辑任务创建请求 */
+  type AiImageEditCreateRequest = {
+    /** 要编辑的图片 id */
+    pictureId: number | string
+    /** 编辑功能，取值见后端 AiImageEditFunctionEnum */
+    function: string
+    /** 提示词，留空由后端补该功能的默认指令，最长 800 字符 */
+    prompt?: string
+    /** 向上扩展比例，仅扩图使用，[1.0, 2.0] */
+    topScale?: number
+    /** 向下扩展比例，仅扩图使用，[1.0, 2.0] */
+    bottomScale?: number
+    /** 向左扩展比例，仅扩图使用，[1.0, 2.0] */
+    leftScale?: number
+    /** 向右扩展比例，仅扩图使用，[1.0, 2.0] */
+    rightScale?: number
+    /** 图像修改幅度，仅全局风格化/指令编辑使用，[0.0, 1.0] */
+    strength?: number
+    /** 超分放大倍数，仅图像超分使用，1~4 */
+    upscaleFactor?: number
+    /** 输入图是否为线稿，仅线稿生图使用 */
+    isSketch?: boolean
+    /** 涂抹蒙版图像（base64 或 data URI），仅局部重绘使用 */
+    maskImage?: string
+  }
+
+  /** AI 图片编辑结果保存请求（结果地址由服务端按 taskId 取回，前端不传） */
+  type AiImageEditSaveRequest = {
+    /** 任务 id */
+    taskId: string
+    /** 图片名称，留空自动生成 */
+    picName?: string
+    /** true 覆盖原图（原图文件会被删除），false 或留空保存为新图片 */
+    replace?: boolean
+  }
+
+  /** AI 图片编辑任务视图 */
+  type AiImageEditTaskVO = {
+    /** 任务 id */
+    taskId?: string
+    /** 任务状态：PENDING / RUNNING / SUCCEEDED / FAILED / CANCELED / UNKNOWN */
+    taskStatus?: string
+    /** 任务状态中文文案 */
+    statusText?: string
+    /** 生成图片地址，成功时非空；24 小时后失效，不能直接入库 */
+    imageUrl?: string
+    /** 失败原因，任务失败时非空 */
+    failReason?: string
+  }
+
+  /** AI 图片编辑额度视图 */
+  type AiImageEditQuotaVO = {
+    /** 剩余可提交次数，取自 user.aiQuota，用完需联系管理员发放（不按天重置） */
+    remaining?: number
+  }
+
+  /** AI 风格化预设风格 */
+  type AiImageEditStyleVO = {
+    /** 所属功能：stylization_all / stylization_local */
+    function?: string
+    /** 风格名称 */
+    styleName?: string
+    /** 提示词模板，局部风格化含 %s 占位，需替换后再提交 */
+    promptTemplate?: string
+  }
+
+  /** AI 编辑底图（base64），供本地画布绘制涂抹蒙版 */
+  type AiImageEditBaseImageVO = {
+    /** 图片 id */
+    pictureId?: number | string
+    /** 形如 data:image/png;base64,xxx 的完整 data URI */
+    dataUrl?: string
+    /** 原图宽度（蒙版分辨率必须与之一致） */
+    picWidth?: number
+    /** 原图高度 */
+    picHeight?: number
+    /** 原图格式 */
+    picFormat?: string
+    /** 原图字节数 */
+    picSize?: number
   }
 
   // -------------------- 空间模块 --------------------

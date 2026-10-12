@@ -10,16 +10,19 @@
         <h3 style="margin: 12px 0 4px">你还没有私有空间</h3>
         <p style="color: rgba(0, 0, 0, 0.45)">创建后即可在空间内上传和管理自己的图片</p>
       </div>
-      <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 12 }" @finish="doCreate">
+      <a-form :model="createForm" :label-col="{ span: 6 }" :wrapper-col="{ span: 12 }" @finish="doCreate">
         <a-form-item label="空间名称">
           <a-input v-model:value="createForm.spaceName" placeholder="请输入空间名称" />
         </a-form-item>
         <a-form-item label="空间级别">
-          <a-select v-model:value="createForm.spaceLevel" placeholder="选择空间级别">
-            <a-select-option v-for="level in spaceLevels" :key="level.value" :value="level.value">
+          <a-select v-model:value="createForm.spaceLevel" :disabled="!isAdmin">
+            <a-select-option v-for="level in selectableLevels" :key="level.value" :value="level.value">
               {{ level.text }}（{{ level.maxCount }} 张 / {{ formatSize(level.maxSize) }}）
             </a-select-option>
           </a-select>
+          <div v-if="!isAdmin" class="level-tip">
+            普通用户只能创建普通版空间，更高规格（专业版 / 旗舰版）需管理员开通
+          </div>
         </a-form-item>
         <a-form-item :wrapper-col="{ offset: 6, span: 12 }">
           <a-button type="primary" html-type="submit" block :loading="creating">创建空间</a-button>
@@ -30,19 +33,28 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { FolderOutlined } from '@ant-design/icons-vue'
 import { formatSize } from '@/utils'
+import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import { addSpace, listSpaceByPage, listSpaceLevels } from '@/api/spaceController'
 
 const router = useRouter()
+const loginUserStore = useLoginUserStore()
 
 const mySpace = ref<API.SpaceVO>()
 const loading = ref(true)
 const creating = ref(false)
 const spaceLevels = ref<API.SpaceLevel[]>([])
+
+const isAdmin = computed(() => loginUserStore.loginUser.userRole === 'admin')
+// 与后端 SpaceServiceImpl.addSpace 的级别权限一致：非管理员只放开普通版（0），
+// 否则选了高级别只会在提交时收到 40300「无权限创建指定级别的空间」
+const selectableLevels = computed(() =>
+  isAdmin.value ? spaceLevels.value : spaceLevels.value.filter((level) => level.value === 0),
+)
 
 /** 加载我的空间：已有则直接进入空间详情 */
 const fetchMySpace = async () => {
@@ -106,5 +118,12 @@ onMounted(() => {
 .my-spaces-page {
   max-width: 560px;
   margin: 40px auto;
+}
+
+.level-tip {
+  margin-top: 6px;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  line-height: 1.6;
 }
 </style>
