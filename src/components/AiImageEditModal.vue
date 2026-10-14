@@ -216,6 +216,8 @@ import {
   AI_EDIT_SCALE_MAX,
   AI_EDIT_SCALE_MIN,
   AI_EDIT_SCALE_STEP,
+  AI_EDIT_MIN_SIDE_PIXEL,
+  AI_EDIT_MAX_SIDE_PIXEL,
   AI_EDIT_STRENGTH_MAX,
   AI_EDIT_STRENGTH_MIN,
   AI_EDIT_STRENGTH_STEP,
@@ -456,6 +458,18 @@ const buildCreatePayload = (): API.AiImageEditCreateRequest => {
 
 /** 返回错误文案表示本地拦下，空串表示可以继续提交 */
 const validateForm = (): string => {
+  // 尺寸不合规时后端必然拒绝且与功能无关，先在本地挡掉，省一次必失败的往返
+  const { picWidth, picHeight } = props.picture
+  const badSize =
+    !picWidth ||
+    !picHeight ||
+    picWidth < AI_EDIT_MIN_SIDE_PIXEL ||
+    picWidth > AI_EDIT_MAX_SIDE_PIXEL ||
+    picHeight < AI_EDIT_MIN_SIDE_PIXEL ||
+    picHeight > AI_EDIT_MAX_SIDE_PIXEL
+  if (badSize) {
+    return `这张图 ${picWidth || '?'}×${picHeight || '?'}，AI 编辑要求宽高均在 ${AI_EDIT_MIN_SIDE_PIXEL}~${AI_EDIT_MAX_SIDE_PIXEL} 像素之间`
+  }
   const meta = currentFunction.value
   if (meta.param === 'expand') {
     const expanded = AI_EDIT_SCALE_DIRECTIONS.some((direction) => formData[direction.key] > AI_EDIT_SCALE_MIN)
@@ -478,6 +492,7 @@ const doCreateTask = async () => {
     message.warning(invalidMessage)
     return
   }
+  errorText.value = ''
   creating.value = true
   try {
     const res = await createAiImageEditTask(buildCreatePayload())
@@ -491,8 +506,11 @@ const doCreateTask = async () => {
     startPolling(created.taskId)
   } catch (e: any) {
     // 拦截器已把业务错误码转成 reject，这里统一展示后端返回的中文提示
-    errorText.value = '提交失败：' + (e?.message ?? '网络异常')
+    const tip = '提交失败：' + (e?.message ?? '网络异常')
+    errorText.value = tip
     phase.value = 'failed'
+    // 文案与上次完全相同时 Vue 不重绘常驻 alert，用户会以为没点上，所以再弹一条 toast
+    message.error(tip)
   } finally {
     creating.value = false
   }
@@ -545,7 +563,11 @@ const backToForm = () => {
 watch(
   () => props.open,
   (open) => {
-    if (open) fetchQuota()
+    if (open) {
+      // 失败态不该跨开关残留：提交失败说明参数本身不合法，重开只该看到干净的表单
+      if (phase.value === 'failed') backToForm()
+      fetchQuota()
+    }
   },
   { immediate: true },
 )

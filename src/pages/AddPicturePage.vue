@@ -82,9 +82,11 @@ import {
   getPictureVOById,
   listPictureTagCategory,
 } from '@/api/pictureController'
+import { useLoginUserStore } from '@/stores/useLoginUserStore'
 
 const route = useRoute()
 const router = useRouter()
+const loginUserStore = useLoginUserStore()
 
 // 编辑场景：路由 /picture/edit/:id 携带 id
 const pictureId = computed(() => route.params.id as string | undefined)
@@ -96,6 +98,10 @@ const uploadType = ref<'file' | 'url'>('file')
 
 const picture = ref<API.PictureVO>()
 const submitLoading = ref(false)
+/** 公共图库的图被非管理员编辑后会重新进入待审核，首页暂时看不到，提示要讲清这不是丢了 */
+const needReReview = computed(
+  () => loginUserStore.loginUser.userRole !== 'admin' && !picture.value?.spaceId,
+)
 /** 基础编辑（裁剪/旋转）的源文件：只有本地选中的那份能进 canvas，URL 上传拿不到字节 */
 const localFile = ref<File>()
 
@@ -172,7 +178,12 @@ const handleSubmit = async (values: API.PictureEditRequest) => {
   try {
     const res = await editPicture({ ...values, id })
     if (res.data.code === 0) {
-      message.success(pictureId.value ? '图片信息已保存' : '图片创建成功')
+      const successTip = !pictureId.value
+        ? '图片创建成功'
+        : needReReview.value
+          ? '已保存，图片将重新提交审核，通过后在首页展示'
+          : '图片信息已保存'
+      message.success(successTip)
       // 空间上传后回到空间列表，方便继续传下一张
       if (spaceId.value) {
         router.push(`/space/${spaceId.value}`)

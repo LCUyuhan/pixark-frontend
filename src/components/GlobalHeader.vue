@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, ref, watch } from 'vue'
+import { computed, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined } from '@ant-design/icons-vue'
@@ -80,13 +80,10 @@ const menuItems = computed(() =>
 )
 
 // 当前选中菜单（与路由同步）
-const selectedKeys = ref<string[]>([route.path])
-watch(
-  () => route.path,
-  (path) => {
-    selectedKeys.value = [path]
-  },
-)
+// 空间详情页是「我的空间」点进去的落地页（MySpacesPage 会 replace 到 /space/:id），
+// 精确匹配 route.path 会让它谁都不亮，所以先映射回菜单 key
+const menuKeyOf = (path: string) => (path.startsWith('/space/') ? '/my_spaces' : path)
+const selectedKeys = computed(() => [menuKeyOf(route.path)])
 
 const doMenuClick = ({ key }: { key: string }) => {
   router.push(key)
@@ -125,7 +122,52 @@ const doLogout = async () => {
 
 .menu {
   flex: 1;
+  min-width: 0;
   border-bottom: none;
+}
+
+/* ---- 选中态改成浅色胶囊，去掉下划线 ----
+   ADV 4.2.6 的下划线是 .ant-menu-item::after 的 border-bottom，
+   而且 hover / active / open / selected 共用同一条（menu/style/theme.js:138-152），
+   所以先把伪元素整个关掉，再用背景色区分状态。
+   注意：.ant-menu-horizontal 和 .menu 是同一个 ul 元素，不能写进 :deep() 里当后代选择器 */
+.menu :deep(.ant-menu-item::after),
+.menu :deep(.ant-menu-submenu::after) {
+  display: none !important;
+}
+
+.menu :deep(.ant-menu-item),
+.menu :deep(.ant-menu-submenu) {
+  top: 0;
+  margin: 12px 2px;
+  height: 40px;
+  line-height: 40px;
+  vertical-align: top;
+  padding-inline: 14px;
+  border-radius: 8px;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* 选中：底色 + 文字色 + 字重三个通道，不只靠颜色 */
+.menu :deep(.ant-menu-item-selected) {
+  color: #1677ff;
+  font-weight: 600;
+  background-color: #e6f4ff;
+}
+
+/* hover：浅灰底，和选中的蓝底明显区分 */
+.menu :deep(.ant-menu-item:not(.ant-menu-item-selected):hover),
+.menu :deep(.ant-menu-item-active:not(.ant-menu-item-selected)) {
+  color: rgba(0, 0, 0, 0.88);
+  background-color: #f5f5f5;
+}
+
+/* 键盘导航要能看出焦点在哪 */
+.menu :deep(.ant-menu-item:focus-visible) {
+  outline: 2px solid #1677ff;
+  outline-offset: 2px;
 }
 
 .user-info {

@@ -201,3 +201,11 @@ export const AI_EDIT_BRUSH_OPTIONS = [
 ]
 
 export const AI_EDIT_DEFAULT_BRUSH = 0.02
+
+/**
+ * 输入图宽高下限/上限（像素）。百炼 wanx2.1-imageedit 对 base_image_url 的模型级约束，
+ * 10 个 function 共用，与后端 AiImageEditServiceImpl 的 MIN/MAX_SIDE_PIXEL 保持一致
+ */
+export const AI_EDIT_MIN_SIDE_PIXEL = 512
+
+export const AI_EDIT_MAX_SIDE_PIXEL = 4096

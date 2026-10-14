@@ -53,6 +53,9 @@
           </template>
           <template v-else-if="column.key === 'action'">
             <a-space>
+              <a-button type="link" size="small" @click="goSpacePictures(record)">
+                查看该空间图片
+              </a-button>
               <a-button type="link" size="small" @click="doEdit(record)">改名</a-button>
               <a-button type="link" size="small" @click="doUpdate(record)">改级别</a-button>
               <a-popconfirm title="确定要删除该空间吗？空间内图片将一并删除" @confirm="doDelete(record.id)">
@@ -96,6 +99,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import { formatSize } from '@/utils'
@@ -107,6 +111,8 @@ import {
   updateSpace,
 } from '@/api/spaceController'
 
+const router = useRouter()
+
 const columns = [
   { title: 'ID', dataIndex: 'id', width: 190 },
   { title: '空间名称', dataIndex: 'spaceName', width: 140 },
@@ -114,8 +120,16 @@ const columns = [
   { title: '使用情况', dataIndex: 'usage', width: 200 },
   { title: '所属用户', dataIndex: 'user', width: 140 },
   { title: '创建时间', dataIndex: 'createTime', width: 170 },
-  { title: '操作', key: 'action', width: 200, fixed: 'right' as const },
+  { title: '操作', key: 'action', width: 300, fixed: 'right' as const },
 ]
+
+/**
+ * 跳图片管理页并按该空间筛选。
+ * 不走 /space/:id —— 那是用户端页面，管理员看别人的空间会被 checkPictureAuth 的空间归属校验拦掉
+ */
+const goSpacePictures = (record: API.SpaceVO) => {
+  router.push(`/admin/pictureManage?spaceId=${record.id}`)
+}
 
 const searchParams = reactive<API.SpaceQueryRequest>({
   current: 1,

@@ -228,20 +228,6 @@ declare namespace API {
     tags?: string[]
   }
 
-  /** 图片更新请求（仅管理员） */
-  type PictureUpdateRequest = {
-    /** id */
-    id: number | string
-    /** 图片名称 */
-    name?: string
-    /** 简介 */
-    introduction?: string
-    /** 分类 */
-    category?: string
-    /** 标签 */
-    tags?: string[]
-  }
-
   /** 图片查询请求（含分页参数） */
   type PictureQueryRequest = {
     /** 当前页号 */

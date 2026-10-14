@@ -40,11 +40,6 @@ export async function deletePicture(body: API.DeleteRequest) {
   return request.post<API.BaseResponse<boolean>>('/picture/delete', body)
 }
 
-/** 更新图片（仅管理员）POST /picture/update */
-export async function updatePicture(body: API.PictureUpdateRequest) {
-  return request.post<API.BaseResponse<boolean>>('/picture/update', body)
-}
-
 /** 根据 id 获取图片（仅管理员）GET /picture/get */
 export async function getPictureById(params: { id: number | string }) {
   return request.get<API.BaseResponse<API.PictureVO>>('/picture/get', { params })
