@@ -599,4 +599,78 @@ declare namespace API {
     /** 创建用户信息 */
     user?: UserVO
   }
+
+  /** 空间分析通用请求范围：优先级 queryAll > queryPublic > spaceId */
+  type SpaceAnalyzeRequest = {
+    /** 空间 id（雪花 id，字符串传递） */
+    spaceId?: string
+    /** 是否分析公共图库（仅管理员） */
+    queryPublic?: boolean
+    /** 是否分析全部空间（仅管理员） */
+    queryAll?: boolean
+  }
+
+  /** 空间资源使用分析响应 */
+  type SpaceUsageAnalyzeResponse = {
+    /** 已使用大小（字节） */
+    usedSize?: number
+    /** 总配额（字节），公共图库为 null */
+    maxSize?: number
+    /** 存储使用百分比，已乘 100；公共图库为 null */
+    sizeUsageRatio?: number
+    /** 已用图片数 */
+    usedCount?: number
+    /** 图片数上限；公共图库为 null */
+    maxCount?: number
+    /** 图片数量使用百分比，已乘 100；公共图库为 null */
+    countUsageRatio?: number
+  }
+
+  /** 空间图片分类分析响应 */
+  type SpaceCategoryAnalyzeResponse = {
+    /** 分类名，无分类时为「未分类」 */
+    category?: string
+    /** 该分类图片数量 */
+    count?: number
+    /** 该分类图片总大小（字节） */
+    totalSize?: number
+  }
+
+  /** 空间图片标签分析响应 */
+  type SpaceTagAnalyzeResponse = {
+    /** 标签名 */
+    tag?: string
+    /** 关联图片数，已按降序排列 */
+    count?: number
+  }
+
+  /** 空间图片大小分段分析响应 */
+  type SpaceSizeAnalyzeResponse = {
+    /** 大小分段，如 <100KB */
+    sizeRange?: string
+    /** 该段图片数量 */
+    count?: number
+  }
+
+  /** 用户上传行为分析响应 */
+  type SpaceUserAnalyzeResponse = {
+    /** 时间区间，如 2026-10-14 / 202642 / 2026-10 */
+    period?: string
+    /** 该区间上传数量 */
+    count?: number
+  }
+
+  /** 用户上传行为分析请求 */
+  type SpaceUserAnalyzeRequest = SpaceAnalyzeRequest & {
+    /** 按用户 id 过滤（雪花 id，字符串传递） */
+    userId?: string
+    /** 时间维度：day / week / month */
+    timeDimension?: string
+  }
+
+  /** 空间使用排行分析请求（后端不接收查询范围参数） */
+  type SpaceRankAnalyzeRequest = {
+    /** 取前 N 个空间，后端默认 10 */
+    topN?: number
+  }
 }

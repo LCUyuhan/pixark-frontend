@@ -13,6 +13,10 @@
           <a-button @click="toggleBatchMode">{{ batchMode ? '退出批量' : '批量管理' }}</a-button>
           <a-button @click="showSearch = !showSearch">{{ showSearch ? '收起搜索' : '搜索' }}</a-button>
           <a-button @click="doEdit">改名</a-button>
+          <a-button @click="goAnalyze">
+            <BarChartOutlined />
+            空间分析
+          </a-button>
           <a-popconfirm title="确定要删除该空间吗？空间内图片将一并删除" @confirm="doDelete">
             <a-button danger>删除空间</a-button>
           </a-popconfirm>
@@ -232,7 +236,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { FolderOutlined, RobotOutlined } from '@ant-design/icons-vue'
+import { FolderOutlined, RobotOutlined, BarChartOutlined } from '@ant-design/icons-vue'
 import dayjs, { type Dayjs } from 'dayjs'
 import AiImageEditModal from '@/components/AiImageEditModal.vue'
 import { formatSize } from '@/utils'
@@ -538,6 +542,14 @@ const fetchLevels = async () => {
 /** 上传复用创建页那套两段式流程，spaceId 用查询参数带过去 */
 const goUploadPage = () => {
   router.push(`/add_picture?spaceId=${spaceId.value}`)
+}
+
+/** 分析页同标签页打开，并把空间名带过去，省掉分析页再去查一次名字（后端没有按 id 查空间的端点） */
+const goAnalyze = () => {
+  router.push({
+    path: '/space_analyze',
+    query: { spaceId: String(spaceId.value), name: space.value?.spaceName ?? '' },
+  })
 }
 
 const showEditModal = ref(false)

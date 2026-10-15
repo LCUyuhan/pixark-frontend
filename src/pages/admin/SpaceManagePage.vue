@@ -1,8 +1,12 @@
 <template>
   <div class="space-manage-page">
     <a-card>
-      <a-space style="margin-bottom: 16px; width: 100%; justify-content: space-between">
+      <a-space style="margin-bottom: 16px; width: 100%; justify-content: space-between" wrap>
         <span style="font-size: 16px; font-weight: 600">用户空间管理</span>
+        <a-space wrap>
+          <a-button @click="goAnalyzeScope('public')">分析公共图库</a-button>
+          <a-button @click="goAnalyzeScope('all')">分析全空间</a-button>
+        </a-space>
       </a-space>
 
       <!-- 搜索表单 -->
@@ -52,9 +56,12 @@
             {{ record.createTime ? dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') : '-' }}
           </template>
           <template v-else-if="column.key === 'action'">
-            <a-space>
+            <a-space wrap>
               <a-button type="link" size="small" @click="goSpacePictures(record)">
                 查看该空间图片
+              </a-button>
+              <a-button type="link" size="small" @click="goSpaceAnalyze(record)">
+                分析
               </a-button>
               <a-button type="link" size="small" @click="doEdit(record)">改名</a-button>
               <a-button type="link" size="small" @click="doUpdate(record)">改级别</a-button>
@@ -120,7 +127,7 @@ const columns = [
   { title: '使用情况', dataIndex: 'usage', width: 200 },
   { title: '所属用户', dataIndex: 'user', width: 140 },
   { title: '创建时间', dataIndex: 'createTime', width: 170 },
-  { title: '操作', key: 'action', width: 300, fixed: 'right' as const },
+  { title: '操作', key: 'action', width: 340, fixed: 'right' as const },
 ]
 
 /**
@@ -129,6 +136,18 @@ const columns = [
  */
 const goSpacePictures = (record: API.SpaceVO) => {
   router.push(`/admin/pictureManage?spaceId=${record.id}`)
+}
+
+/** 分析页同标签页打开：多个 target=_blank 的同名标签页在浏览器里根本分不清 */
+const goAnalyzeScope = (scope: 'all' | 'public') => {
+  router.push({ path: '/space_analyze', query: scope === 'all' ? { queryAll: '1' } : { queryPublic: '1' } })
+}
+
+const goSpaceAnalyze = (record: API.SpaceVO) => {
+  router.push({
+    path: '/space_analyze',
+    query: { spaceId: String(record.id), name: record.spaceName ?? '' },
+  })
 }
 
 const searchParams = reactive<API.SpaceQueryRequest>({

@@ -44,7 +44,7 @@
 import { computed, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined, AuditOutlined } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import { userLogout } from '@/api/userController'
 
@@ -58,6 +58,7 @@ const originItems = [
   { key: '/', label: '主页', icon: () => h(HomeOutlined) },
   // 后端 /picture/upload 已对所有登录用户放开
   { key: '/add_picture', label: '创建图片', icon: () => h(PlusOutlined) },
+  { key: '/my_pictures', label: '我的投稿', icon: () => h(AuditOutlined), hideForAdmin: true },
   { key: '/my_spaces', label: '我的空间', icon: () => h(FolderOutlined), hideForAdmin: true },
   { key: '/admin/userManage', label: '用户管理', icon: () => h(UserOutlined), needAdmin: true },
   { key: '/admin/pictureManage', label: '图片管理', icon: () => h(PictureOutlined), needAdmin: true },

@@ -3,7 +3,7 @@
     <a-card :loading="loading">
       <a-row :gutter="[24, 24]">
         <!-- 图片展示 -->
-        <a-col :xs="24" :md="14">
+        <a-col :xs="24" :md="14" class="image-col">
           <a-image :src="picture.url" :alt="picture.name" style="max-width: 100%" />
         </a-col>
         <!-- 图片信息 -->
@@ -277,6 +277,14 @@ onMounted(() => {
 .picture-detail-page {
   max-width: 1080px;
   margin: 0 auto;
+}
+
+/* a-row 默认会把两列拉到同高，图片贴在列顶会空出一片；这里只让图片所在列内部居中，
+   右列仍保持顶部对齐。竖图时左列被撑高，居中没有位移，等于无副作用 */
+.image-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-thumb {

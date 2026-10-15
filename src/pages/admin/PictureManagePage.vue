@@ -205,7 +205,7 @@
                 type="link"
                 size="small"
                 danger
-                @click="doReview(record, PIC_REVIEW_STATUS_ENUM.REJECT)"
+                @click="openRejectModal(record)"
               >
                 拒绝
               </a-button>
@@ -224,6 +224,27 @@
         </template>
       </a-table>
     </a-card>
+
+    <!-- 拒绝理由会原样下发到用户的「我的投稿」页，留空则退回默认文案 -->
+    <a-modal
+      v-model:open="rejectOpen"
+      title="拒绝该图片"
+      :confirm-loading="rejectLoading"
+      ok-text="确认拒绝"
+      cancel-text="取消"
+      @ok="confirmReject"
+    >
+      <p class="reject-tip">
+        拒绝理由会展示给上传者（「我的投稿」页的审核信息），写清楚哪里不合规、怎么改，能省一轮来回。
+      </p>
+      <a-textarea
+        v-model:value="rejectReason"
+        :rows="3"
+        :maxlength="500"
+        show-count
+        placeholder="选填，留空则记为「管理员操作拒绝」"
+      />
+    </a-modal>
   </div>
 </template>
 
@@ -421,20 +442,53 @@ const reviewStatusColor = (status?: number) => {
   return 'orange'
 }
 
-/** 审核图片（通过 / 拒绝） */
-const doReview = async (record: API.Picture, reviewStatus: number) => {
-  const reviewMessage =
-    reviewStatus === PIC_REVIEW_STATUS_ENUM.PASS ? '管理员操作通过' : '管理员操作拒绝'
+/** 审核图片（通过 / 拒绝）；拒绝理由留空则用默认文案。返回 true 表示后端已受理 */
+const doReview = async (record: API.Picture, reviewStatus: number, reason?: string): Promise<boolean> => {
+  const reviewMessage = reason?.trim()
+    ? reason.trim()
+    : reviewStatus === PIC_REVIEW_STATUS_ENUM.PASS
+      ? '管理员操作通过'
+      : '管理员操作拒绝'
   try {
     const res = await doPictureReview({ id: record.id, reviewStatus, reviewMessage })
     if (res.data.code === 0) {
       message.success('审核操作成功')
       fetchData()
-    } else {
-      message.error('审核操作失败：' + res.data.message)
+      return true
     }
+    message.error('审核操作失败：' + res.data.message)
+    return false
   } catch (e: any) {
     message.error('审核操作失败：' + (e?.message ?? '网络错误'))
+    return false
+  }
+}
+
+const rejectOpen = ref(false)
+const rejectLoading = ref(false)
+const rejectReason = ref('')
+const rejectTarget = ref<API.Picture>()
+
+const openRejectModal = (record: API.Picture) => {
+  rejectTarget.value = record
+  rejectReason.value = ''
+  rejectOpen.value = true
+}
+
+/** 失败时保持弹窗打开，管理员填的理由不至于跟着一起丢 */
+const confirmReject = async () => {
+  const record = rejectTarget.value
+  if (!record) {
+    return
+  }
+  rejectLoading.value = true
+  try {
+    const ok = await doReview(record, PIC_REVIEW_STATUS_ENUM.REJECT, rejectReason.value)
+    if (ok) {
+      rejectOpen.value = false
+    }
+  } finally {
+    rejectLoading.value = false
   }
 }
 

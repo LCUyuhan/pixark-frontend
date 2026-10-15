@@ -1,0 +1,119 @@
+<template>
+  <a-card title="图库标签热度">
+    <v-chart v-if="loading || dataList.length" autoresize :option="options" :loading="loading" class="chart" />
+    <div v-else class="empty-tip">还没有带标签的图片</div>
+    <template #extra>
+      <span class="legend-hint">字号与颜色越深 = 使用越多</span>
+    </template>
+  </a-card>
+</template>
+
+<script setup lang="ts">
+import { message } from 'ant-design-vue'
+import { computed, ref, watchEffect } from 'vue'
+import VChart from 'vue-echarts'
+import { getSpaceTagAnalyze } from '@/api/spaceAnalyzeController'
+import '@/plugins/echarts'
+
+interface Props {
+  spaceId?: string
+  queryPublic?: boolean
+  queryAll?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  spaceId: undefined,
+  queryPublic: false,
+  queryAll: false,
+})
+
+const dataList = ref<API.SpaceTagAnalyzeResponse[]>([])
+const loading = ref(true)
+
+const fetchData = async () => {
+  loading.value = true
+  try {
+    const res = await getSpaceTagAnalyze({
+      spaceId: props.spaceId,
+      queryPublic: props.queryPublic,
+      queryAll: props.queryAll,
+    })
+    if (res.data.code === 0) {
+      dataList.value = res.data.data ?? []
+    } else {
+      dataList.value = []
+      message.error('获取数据失败，' + res.data.message)
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+// 同一色相分四档深浅：颜色在这里承载"热度"信息，而不是装饰
+const HEAT_COLORS = ['#1677ff', '#4096ff', '#91caff', '#d6e8ff']
+
+const colorOf = (count: number, max: number) => {
+  if (!max) {
+    return HEAT_COLORS[3]
+  }
+  const ratio = count / max
+  if (ratio >= 0.6) {
+    return HEAT_COLORS[0]
+  }
+  if (ratio >= 0.35) {
+    return HEAT_COLORS[1]
+  }
+  return ratio >= 0.15 ? HEAT_COLORS[2] : HEAT_COLORS[3]
+}
+
+const options = computed(() => {
+  const max = dataList.value.reduce((acc, item) => Math.max(acc, item.count ?? 0), 0)
+  return {
+    tooltip: {
+      trigger: 'item',
+      formatter: (params: any) => `${params.name}：${params.value} 张`,
+    },
+    series: [
+      {
+        type: 'wordCloud',
+        gridSize: 6,
+        sizeRange: [12, 34],
+        // 不旋转：中文竖排可读性差，且旋转后极易互相压字
+        rotationRange: [0, 0],
+        shape: 'circle',
+        width: '96%',
+        height: '92%',
+        data: dataList.value.map((item) => {
+          const count = item.count ?? 0
+          return {
+            name: item.tag ?? '',
+            value: count,
+            textStyle: { color: colorOf(count, max) },
+          }
+        }),
+      },
+    ],
+  }
+})
+
+watchEffect(fetchData)
+</script>
+
+<style scoped>
+.chart {
+  height: 320px;
+  max-width: 100%;
+}
+
+.legend-hint {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+}
+
+.empty-tip {
+  height: 320px;
+  line-height: 320px;
+  color: rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+</style>

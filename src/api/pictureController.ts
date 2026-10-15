@@ -60,6 +60,11 @@ export async function listPictureVOByPage(body: API.PictureQueryRequest) {
   return request.post<API.BaseResponse<API.Page<API.PictureVO>>>('/picture/list/page/vo', body)
 }
 
+/** 我上传的公共图片分页（含待审核/被拒绝；后端强制按登录用户过滤）POST /picture/my/list/page/vo */
+export async function listMyPictureVOByPage(body: API.PictureQueryRequest) {
+  return request.post<API.BaseResponse<API.Page<API.PictureVO>>>('/picture/my/list/page/vo', body)
+}
+
 /** 编辑图片（本人或管理员）POST /picture/edit */
 export async function editPicture(body: API.PictureEditRequest) {
   return request.post<API.BaseResponse<boolean>>('/picture/edit', body)
