@@ -10,6 +10,7 @@ import { computed, ref, watchEffect } from 'vue'
 import VChart from 'vue-echarts'
 import { getSpaceRankAnalyze } from '@/api/spaceAnalyzeController'
 import '@/plugins/echarts'
+import { useChartTheme } from '@/composables/useChartTheme'
 
 const TOP_N = 10
 
@@ -34,7 +35,10 @@ const fetchData = async () => {
 
 watchEffect(fetchData)
 
+const chartTheme = useChartTheme()
+
 const options = computed(() => ({
+  textStyle: chartTheme.value.textStyle,
   tooltip: {
     trigger: 'axis',
     axisPointer: { type: 'shadow' },
@@ -54,7 +58,7 @@ const options = computed(() => ({
     axisTick: { alignWithLabel: true },
     axisLabel: { interval: 0, rotate: 30, width: 88, overflow: 'truncate' },
   },
-  yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f0f0f0' } } },
+  yAxis: { type: 'value', splitLine: chartTheme.value.splitLine },
   series: [
     {
       name: '占用 (MB)',

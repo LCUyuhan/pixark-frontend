@@ -219,7 +219,7 @@ onBeforeUnmount(() => {
 
 .avatar-tip {
   margin-top: 4px;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 12px;
 }
 </style>

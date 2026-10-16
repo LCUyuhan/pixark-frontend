@@ -74,7 +74,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   max-width: 360px;
   margin: 32px auto;
   padding: 24px;
-  background: #fff;
+  background: var(--color-bg-container);
   border-radius: 8px;
 }
 
@@ -85,13 +85,13 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 
 .desc {
   text-align: center;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   margin-bottom: 24px;
 }
 
 .tips {
   text-align: right;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   margin-bottom: 16px;
 }
 </style>

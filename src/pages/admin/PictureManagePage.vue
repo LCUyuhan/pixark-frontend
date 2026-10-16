@@ -377,13 +377,15 @@ const fetchData = async () => {
   loading.value = true
   try {
     const res = await listPictureByPage({ ...searchParams })
-    if (res.data.code === 0 && res.data.data) {
-      dataList.value = res.data.data.records ?? []
-      total.value = Number(res.data.data.total ?? 0)
-    } else {
-      message.error('获取图片列表失败：' + res.data.message)
+    if (res.data.code !== 0 || !res.data.data) {
+      throw new Error(res.data.message || '服务端返回异常')
     }
+    dataList.value = res.data.data.records ?? []
+    total.value = Number(res.data.data.total ?? 0)
   } catch (e: any) {
+    // 失败要清掉旧数据，否则上一次筛选的结果会留着像请求成功一样
+    dataList.value = []
+    total.value = 0
     message.error('获取图片列表失败：' + (e?.message ?? '网络错误'))
   } finally {
     loading.value = false
@@ -570,10 +572,10 @@ onMounted(() => {
 
 /* 只读占位：cursor: help + 虚线下划线，暗示这里 hover 有解释，不像按钮坏了 */
 .readonly-hint {
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 13px;
   cursor: help;
-  border-bottom: 1px dashed rgba(0, 0, 0, 0.25);
+  border-bottom: 1px dashed var(--color-text-disabled);
 }
 
 .tag-line {
@@ -602,7 +604,7 @@ onMounted(() => {
 
 .detail-label {
   flex: 0 0 auto;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
 }
 
 .detail-label::after {

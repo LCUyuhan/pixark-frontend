@@ -106,14 +106,14 @@ watchEffect(fetchData)
 }
 
 .legend-hint {
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 12px;
 }
 
 .empty-tip {
   height: 320px;
   line-height: 320px;
-  color: rgba(0, 0, 0, 0.25);
+  color: var(--color-text-disabled);
   text-align: center;
 }
 </style>

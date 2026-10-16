@@ -1,0 +1,44 @@
+/**
+ * 设计令牌（颜色）。暗色值见 dark.css。
+ *
+ * 数值不是手挑的，全部取自安装包内 ant-design-vue 4.2.6 默认算法的实际输出，
+ * 保证手写样式和 AntDV 组件在两种主题下不会各画各的：
+ *   中性色  node_modules/ant-design-vue/es/theme/themes/{default,dark}/colors.js
+ *   色相梯度  require('@ant-design/colors').generate('#1677ff')
+ *
+ * --color-primary 必须与 src/constants/theme.ts 的 THEME_SEED.colorPrimary 一致，
+ * 后者是传给 a-config-provider 的唯一种子；改主色时两处一起改。
+ *
+ * 只收录了被 <style> 块真实用到的值。hover/active 梯度、间距、圆角、阴影梯度暂未建令牌，
+ * 等有用到再加。
+ */
+:root {
+  /* 主色 */
+  --color-primary: #1677ff;
+  --color-primary-bg: #e6f4ff;
+  --color-primary-border: #91caff;
+  --color-primary-ring: rgba(22, 119, 255, 0.2);
+
+  /* 文字 */
+  --color-text: rgba(0, 0, 0, 0.88);
+  --color-text-secondary: rgba(0, 0, 0, 0.65);
+  --color-text-tertiary: rgba(0, 0, 0, 0.45);
+  --color-text-placeholder: rgba(0, 0, 0, 0.35);
+  --color-text-disabled: rgba(0, 0, 0, 0.25);
+
+  /* 背景 */
+  --color-bg-container: #ffffff;
+  --color-bg-layout: #f5f5f5;
+  --color-bg-subtle: #fafafa;
+  --color-bg-footer: #f0f2f5;
+
+  /* 描边 */
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-border-secondary: #f0f0f0;
+
+  /* 阴影用的颜色（阴影本身仍是各处的 box-shadow 字面量，只有这层颜色随主题翻） */
+  --color-shadow-header: rgba(0, 0, 0, 0.06);
+
+  /* 布局 */
+  --page-max-width: 1280px;
+}

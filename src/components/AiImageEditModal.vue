@@ -590,7 +590,7 @@ onBeforeUnmount(stopPolling)
 <style scoped>
 .pane-title {
   margin-bottom: 8px;
-  color: rgba(0, 0, 0, 0.65);
+  color: var(--color-text-secondary);
   font-size: 13px;
 }
 
@@ -599,9 +599,9 @@ onBeforeUnmount(stopPolling)
   align-items: center;
   justify-content: center;
   height: 260px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--color-border-secondary);
   border-radius: 6px;
-  background: #fafafa;
+  background: var(--color-bg-subtle);
   overflow: hidden;
 }
 
@@ -613,7 +613,7 @@ onBeforeUnmount(stopPolling)
 
 .pane-empty {
   padding: 0 16px;
-  color: rgba(0, 0, 0, 0.35);
+  color: var(--color-text-placeholder);
   font-size: 13px;
   text-align: center;
 }
@@ -629,7 +629,7 @@ onBeforeUnmount(stopPolling)
 .func-desc,
 .scale-tip {
   margin-top: 4px;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 12px;
 }
 
@@ -641,7 +641,7 @@ onBeforeUnmount(stopPolling)
 
 .scale-label {
   width: 40px;
-  color: rgba(0, 0, 0, 0.65);
+  color: var(--color-text-secondary);
 }
 
 .scale-slider {
@@ -655,7 +655,7 @@ onBeforeUnmount(stopPolling)
 }
 
 .prompt-preview {
-  color: rgba(0, 0, 0, 0.65);
+  color: var(--color-text-secondary);
   word-break: break-all;
 }
 
@@ -674,7 +674,7 @@ onBeforeUnmount(stopPolling)
 }
 
 .quota-tip {
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 12px;
 }
 </style>

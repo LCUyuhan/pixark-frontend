@@ -120,7 +120,7 @@ const onEditConfirm = async (edited: File) => {
 
 .tips {
   text-align: center;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 12px;
   margin-top: 8px;
 }
@@ -134,7 +134,7 @@ const onEditConfirm = async (edited: File) => {
 }
 
 .actions-tip {
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 12px;
 }
 </style>

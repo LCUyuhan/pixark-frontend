@@ -171,7 +171,7 @@ const goBack = () => {
 }
 
 .page-sep {
-  color: rgba(0, 0, 0, 0.25);
+  color: var(--color-text-disabled);
   margin: 0 4px;
 }
 

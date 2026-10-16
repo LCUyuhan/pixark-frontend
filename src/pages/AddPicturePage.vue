@@ -218,7 +218,7 @@ onMounted(() => {
 
 .preview-tip {
   margin-top: 8px;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 12px;
 }
 </style>

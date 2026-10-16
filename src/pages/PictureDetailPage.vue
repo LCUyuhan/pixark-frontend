@@ -291,15 +291,15 @@ onMounted(() => {
   width: 100%;
   height: 140px;
   object-fit: contain;
-  background: #fafafa;
+  background: var(--color-bg-subtle);
 }
 
 .search-tip {
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 12px;
 }
 
 .no-source {
-  color: rgba(0, 0, 0, 0.25);
+  color: var(--color-text-disabled);
 }
 </style>

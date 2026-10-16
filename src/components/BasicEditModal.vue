@@ -186,7 +186,7 @@ onBeforeUnmount(destroyCropper)
 
 .cropper-wrapper {
   height: 420px;
-  background: #f5f5f5;
+  background: var(--color-bg-layout);
 }
 
 .cropper-wrapper img {
@@ -197,7 +197,7 @@ onBeforeUnmount(destroyCropper)
 .cropper-tip {
   margin-top: 8px;
   text-align: center;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 12px;
 }
 </style>

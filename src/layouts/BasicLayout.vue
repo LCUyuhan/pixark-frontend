@@ -21,25 +21,36 @@ const route = useRoute()
 </script>
 
 <style scoped>
+/* 只给真正会变色的三个面加过渡，不用全局 * { transition: all }：
+   后者会让 hover、路由切换、图片淡入全都跟着延迟 */
+.header,
+.content,
+.footer {
+  transition:
+    background-color 0.25s ease,
+    box-shadow 0.25s ease,
+    color 0.25s ease;
+}
+
 .basic-layout {
   min-height: 100vh;
 }
 
 .header {
   padding: 0;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: var(--color-bg-container);
+  box-shadow: 0 2px 8px var(--color-shadow-header);
 }
 
 .content {
   padding: 24px;
-  background: #f5f5f5;
+  background: var(--color-bg-layout);
 }
 
 .footer {
   text-align: center;
-  background: #f0f2f5;
+  background: var(--color-bg-footer);
   padding: 16px;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
 }
 </style>

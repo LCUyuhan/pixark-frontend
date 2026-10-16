@@ -143,7 +143,7 @@ const remainCountText = computed(() => {
 
 .gauge-label {
   margin-top: 4px;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 13px;
 }
 
@@ -156,7 +156,7 @@ const remainCountText = computed(() => {
 .summary {
   flex: 1 1 240px;
   min-width: 240px;
-  border-left: 1px solid #f0f0f0;
+  border-left: 1px solid var(--color-border-secondary);
   padding-left: 24px;
 }
 
@@ -169,7 +169,7 @@ const remainCountText = computed(() => {
 }
 
 .summary-key {
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 13px;
 }
 
@@ -181,7 +181,7 @@ const remainCountText = computed(() => {
 
 .summary-note {
   margin-top: 8px;
-  color: rgba(0, 0, 0, 0.35);
+  color: var(--color-text-placeholder);
   font-size: 12px;
 }
 
@@ -189,7 +189,7 @@ const remainCountText = computed(() => {
   .summary {
     border-left: none;
     padding-left: 0;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--color-border-secondary);
     padding-top: 12px;
   }
 }

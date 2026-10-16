@@ -230,9 +230,9 @@ onMounted(() => {
   position: relative;
   display: inline-block;
   max-width: 100%;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--color-border-secondary);
   border-radius: 6px;
-  background: #fafafa;
+  background: var(--color-bg-subtle);
 }
 
 .stage-base {
@@ -259,13 +259,13 @@ onMounted(() => {
 }
 
 .paint-size {
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 12px;
 }
 
 .paint-tip {
   margin-top: 8px;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 12px;
   line-height: 1.6;
 }

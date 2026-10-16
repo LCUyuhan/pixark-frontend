@@ -23,6 +23,7 @@ import { computed, ref, watchEffect } from 'vue'
 import VChart from 'vue-echarts'
 import { getSpaceUserAnalyze } from '@/api/spaceAnalyzeController'
 import '@/plugins/echarts'
+import { useChartTheme } from '@/composables/useChartTheme'
 
 interface Props {
   spaceId?: string
@@ -74,7 +75,10 @@ const fetchData = async () => {
   }
 }
 
+const chartTheme = useChartTheme()
+
 const options = computed(() => ({
+  textStyle: chartTheme.value.textStyle,
   tooltip: { trigger: 'axis', formatter: (params: any) => {
     const item = params?.[0]
     return item ? `${item.axisValue}<br/>上传：${item.value} 张` : ''
@@ -87,7 +91,7 @@ const options = computed(() => ({
     axisLabel: { rotate: dataList.value.length > 12 ? 45 : 0 },
   },
   // 轴名画在轴顶端外侧，卡片里容易被裁；单位改由 tooltip 表达
-  yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f0f0f0' } } },
+  yAxis: { type: 'value', splitLine: chartTheme.value.splitLine },
   series: [
     {
       name: '上传数量',

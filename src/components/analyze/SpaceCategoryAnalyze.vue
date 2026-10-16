@@ -10,6 +10,7 @@ import { computed, ref, watchEffect } from 'vue'
 import VChart from 'vue-echarts'
 import { getSpaceCategoryAnalyze } from '@/api/spaceAnalyzeController'
 import '@/plugins/echarts'
+import { useChartTheme } from '@/composables/useChartTheme'
 
 interface Props {
   spaceId?: string
@@ -47,6 +48,8 @@ const fetchData = async () => {
 
 watchEffect(fetchData)
 
+const chartTheme = useChartTheme()
+
 // 单位写进图例而不是 yAxis.name —— 轴名画在轴顶端外侧，卡片里极易被裁
 const options = computed(() => {
   const categories = dataList.value.map((item) => item.category ?? '未分类')
@@ -54,6 +57,7 @@ const options = computed(() => {
   const sizeData = dataList.value.map((item) => Number((((item.totalSize ?? 0) / 1024 / 1024)).toFixed(2)))
 
   return {
+    textStyle: chartTheme.value.textStyle,
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
@@ -66,7 +70,7 @@ const options = computed(() => {
     grid: { left: 48, right: 48, top: 24, bottom: 48 },
     xAxis: { type: 'category', data: categories, axisTick: { alignWithLabel: true } },
     yAxis: [
-      { type: 'value', splitLine: { lineStyle: { color: '#f0f0f0' } } },
+      { type: 'value', splitLine: chartTheme.value.splitLine },
       { type: 'value', position: 'right', splitLine: { show: false } },
     ],
     series: [

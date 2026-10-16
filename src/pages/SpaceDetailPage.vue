@@ -4,7 +4,7 @@
     <a-card v-if="space" style="margin-bottom: 16px">
       <a-space style="width: 100%; justify-content: space-between" wrap>
         <a-space>
-          <FolderOutlined style="color: #1677ff; font-size: 20px" />
+          <FolderOutlined style="color: var(--color-primary); font-size: 20px" />
           <span style="font-size: 18px; font-weight: 600">{{ space.spaceName }}</span>
           <a-tag :color="levelColor(space.spaceLevel)">{{ levelText(space.spaceLevel) }}</a-tag>
         </a-space>
@@ -116,60 +116,27 @@
         <a-tag color="purple">颜色搜索结果（按相似度前 12）</a-tag>
         <a-button size="small" @click="colorMode = false">返回图片列表</a-button>
       </a-space>
-      <a-list
-        :grid="{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 5, xxl: 5 }"
-        :data-source="colorResults"
-        :loading="colorLoading"
-      >
-        <template #renderItem="{ item }">
-          <a-list-item>
-            <a-card hoverable @click="router.push(`/picture/${item.id}`)">
-              <template #cover>
-                <div class="picture-cover">
-                  <img :alt="item.name" :src="item.thumbnailUrl || item.url" loading="lazy" />
-                </div>
-              </template>
-              <a-card-meta :title="item.name" />
-            </a-card>
-          </a-list-item>
-        </template>
-      </a-list>
+      <PictureListView :pictures="colorResults" :loading="colorLoading" :lazy-rows="false" @click="goDetail" />
     </template>
 
     <!-- 普通图片列表 -->
     <template v-else>
-      <a-list
-        :grid="{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 5, xxl: 5 }"
-        :data-source="dataList"
+      <PictureListView
+        :pictures="dataList"
         :loading="loading"
+        :lazy-rows="false"
+        :selectable="batchMode"
+        :selected-ids="selectedIds"
+        :can-action="canAiEdit"
+        @click="doClickPicture"
+        @toggle-select="toggleSelect"
       >
-        <template #renderItem="{ item }">
-          <a-list-item>
-            <div class="picture-item" :class="{ selected: isSelected(item.id) }" @click="doClickPicture(item)">
-              <a-checkbox
-                v-if="batchMode"
-                class="select-box"
-                :checked="isSelected(item.id)"
-                @click.stop
-                @change="toggleSelect(item.id)"
-              />
-              <a-card hoverable>
-                <template #cover>
-                  <div class="picture-cover">
-                    <img :alt="item.name" :src="item.thumbnailUrl || item.url" loading="lazy" />
-                  </div>
-                </template>
-                <a-card-meta :title="item.name" />
-                <template v-if="!batchMode && canAiEdit(item)" #actions>
-                  <span class="card-action" title="AI 编辑" @click.stop="openAiEdit(item)">
-                    <RobotOutlined />
-                  </span>
-                </template>
-              </a-card>
-            </div>
-          </a-list-item>
+        <template #actions="{ picture }">
+          <span class="card-action" title="AI 编辑" @click.stop="openAiEdit(picture)">
+            <RobotOutlined />
+          </span>
         </template>
-      </a-list>
+      </PictureListView>
 
       <a-pagination
         v-model:current="searchParams.current"
@@ -239,6 +206,7 @@ import { message } from 'ant-design-vue'
 import { FolderOutlined, RobotOutlined, BarChartOutlined } from '@ant-design/icons-vue'
 import dayjs, { type Dayjs } from 'dayjs'
 import AiImageEditModal from '@/components/AiImageEditModal.vue'
+import PictureListView from '@/components/PictureListView.vue'
 import { formatSize } from '@/utils'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import {
@@ -310,13 +278,15 @@ const fetchPictures = async () => {
   loading.value = true
   try {
     const res = await listPictureVOByPage({ ...searchParams, spaceId: spaceId.value })
-    if (res.data.code === 0 && res.data.data) {
-      dataList.value = res.data.data.records ?? []
-      total.value = Number(res.data.data.total ?? 0)
-    } else {
-      message.error('获取图片失败：' + res.data.message)
+    if (res.data.code !== 0 || !res.data.data) {
+      throw new Error(res.data.message || '服务端返回异常')
     }
+    dataList.value = res.data.data.records ?? []
+    total.value = Number(res.data.data.total ?? 0)
   } catch (e: any) {
+    // 失败必须清掉旧数据，否则上一空间/上一页的图会留在当前列表里
+    dataList.value = []
+    total.value = 0
     message.error('获取图片失败：' + (e?.message ?? '网络错误'))
   } finally {
     loading.value = false
@@ -388,8 +358,6 @@ const toggleBatchMode = () => {
   selectedIds.value = []
 }
 
-const isSelected = (id: number | string) => selectedIds.value.includes(id)
-
 const toggleSelect = (id: number | string) => {
   const idx = selectedIds.value.indexOf(id)
   if (idx >= 0) {
@@ -423,6 +391,12 @@ const doClickPicture = (item: API.PictureVO) => {
   } else {
     router.push(`/picture/${item.id}`)
   }
+}
+
+// 颜色搜索结果没有批量模式，点击一律进详情。不复用 doClickPicture：
+// 批量开关开着时它会变成勾选，而颜色结果里根本没有勾选框
+const goDetail = (item: API.PictureVO) => {
+  router.push(`/picture/${item.id}`)
 }
 
 // 批量改信息
@@ -601,14 +575,14 @@ onMounted(() => {
 
 <style scoped>
 .space-detail-page {
-  max-width: 1280px;
+  max-width: var(--page-max-width);
   margin: 0 auto;
 }
 
 .search-area {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px dashed #f0f0f0;
+  border-top: 1px dashed var(--color-border-secondary);
 }
 
 .search-area :deep(.ant-form-item) {
@@ -627,7 +601,7 @@ onMounted(() => {
   height: 22px;
   border-radius: 4px;
   cursor: pointer;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
 }
 
 .color-swatch:hover {
@@ -638,51 +612,17 @@ onMounted(() => {
   width: 32px;
   height: 24px;
   padding: 0;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   cursor: pointer;
   background: none;
 }
 
-.picture-item {
-  position: relative;
-}
-
-.picture-item.selected :deep(.ant-card) {
-  border-color: #1677ff;
-  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
-}
-
-.select-box {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 2;
-  background: #fff;
-  border-radius: 4px;
-  padding: 2px;
-}
-
-.picture-cover {
-  height: 180px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f5f5;
-}
-
-.picture-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .card-action {
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
 }
 
 .card-action:hover {
-  color: #1677ff;
+  color: var(--color-primary);
 }
 </style>

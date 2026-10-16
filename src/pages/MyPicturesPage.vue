@@ -147,13 +147,15 @@ const fetchData = async () => {
       sortField: 'createTime',
       sortOrder: 'descend',
     })
-    if (res.data.code === 0 && res.data.data) {
-      pictureList.value = res.data.data.records ?? []
-      pagination.total = res.data.data.total ?? 0
-    } else {
-      message.error('获取数据失败：' + (res.data.message ?? ''))
+    if (res.data.code !== 0 || !res.data.data) {
+      throw new Error(res.data.message || '服务端返回异常')
     }
+    pictureList.value = res.data.data.records ?? []
+    pagination.total = res.data.data.total ?? 0
   } catch (e: any) {
+    // 失败要清掉旧数据，否则上一次筛选的结果会留着像请求成功一样
+    pictureList.value = []
+    pagination.total = 0
     message.error('获取数据失败：' + (e?.message ?? '网络异常'))
   } finally {
     loading.value = false
@@ -218,7 +220,7 @@ onMounted(() => {
 }
 
 .page-subtitle {
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   margin-bottom: 16px;
 }
 

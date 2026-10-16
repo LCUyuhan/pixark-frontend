@@ -13,6 +13,14 @@
     />
 
     <div class="right">
+      <a-tooltip :title="themeStore.isDark ? '切换到亮色' : '切换到暗色'">
+        <a-button type="text" aria-label="切换明暗主题" @click="themeStore.toggleTheme()">
+          <template #icon>
+            <BulbFilled v-if="themeStore.isDark" />
+            <BulbOutlined v-else />
+          </template>
+        </a-button>
+      </a-tooltip>
       <!-- 已登录：显示用户名下拉菜单 -->
       <a-dropdown v-if="loginUser.id">
         <a-space class="user-info">
@@ -44,13 +52,15 @@
 import { computed, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined, AuditOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined, AuditOutlined, BulbOutlined, BulbFilled } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
+import { useThemeStore } from '@/stores/useThemeStore'
 import { userLogout } from '@/api/userController'
 
 const router = useRouter()
 const route = useRoute()
 const loginUserStore = useLoginUserStore()
+const themeStore = useThemeStore()
 const loginUser = computed(() => loginUserStore.loginUser)
 
 // 菜单项（管理类菜单仅管理员可见，与后端接口权限一致；我的空间仅普通用户可见）
@@ -118,7 +128,7 @@ const doLogout = async () => {
 .title {
   font-size: 18px;
   font-weight: 600;
-  color: #1677ff;
+  color: var(--color-primary);
 }
 
 .menu {
@@ -153,22 +163,28 @@ const doLogout = async () => {
 
 /* 选中：底色 + 文字色 + 字重三个通道，不只靠颜色 */
 .menu :deep(.ant-menu-item-selected) {
-  color: #1677ff;
+  color: var(--color-primary);
   font-weight: 600;
-  background-color: #e6f4ff;
+  background-color: var(--color-primary-bg);
 }
 
 /* hover：浅灰底，和选中的蓝底明显区分 */
 .menu :deep(.ant-menu-item:not(.ant-menu-item-selected):hover),
 .menu :deep(.ant-menu-item-active:not(.ant-menu-item-selected)) {
-  color: rgba(0, 0, 0, 0.88);
-  background-color: #f5f5f5;
+  color: var(--color-text);
+  background-color: var(--color-bg-layout);
 }
 
 /* 键盘导航要能看出焦点在哪 */
 .menu :deep(.ant-menu-item:focus-visible) {
-  outline: 2px solid #1677ff;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .user-info {

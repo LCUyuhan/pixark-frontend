@@ -3,7 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>智能协同云图库</title>
+    <script>
+      // 在首帧之前打上 .dark-theme，否则暗色用户每次刷新都会先白一下。
+      // key 与 src/constants/theme.ts 的 THEME_STORAGE_KEY 保持一致。
+      try {
+        var saved = localStorage.getItem('yu-picture-theme')
+        var dark = saved ? saved === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
+        if (dark) document.documentElement.classList.add('dark-theme')
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+      } catch (e) {
+        /* 隐私模式下 localStorage 会抛，忽略即可，useThemeStore 会兜底 */
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>

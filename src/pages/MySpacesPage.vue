@@ -6,7 +6,7 @@
     <!-- 无空间：创建表单 -->
     <a-card v-else>
       <div style="text-align: center; margin-bottom: 24px">
-        <FolderOutlined style="font-size: 40px; color: #1677ff" />
+        <FolderOutlined style="font-size: 40px; color: var(--color-primary)" />
         <h3 style="margin: 12px 0 4px">你还没有私有空间</h3>
         <p style="color: rgba(0, 0, 0, 0.45)">创建后即可在空间内上传和管理自己的图片</p>
       </div>
@@ -122,7 +122,7 @@ onMounted(() => {
 
 .level-tip {
   margin-top: 6px;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 12px;
   line-height: 1.6;
 }

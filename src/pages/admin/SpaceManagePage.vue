@@ -181,13 +181,15 @@ const fetchData = async () => {
   loading.value = true
   try {
     const res = await listSpaceByPage({ ...searchParams })
-    if (res.data.code === 0 && res.data.data) {
-      dataList.value = res.data.data.records ?? []
-      total.value = Number(res.data.data.total ?? 0)
-    } else {
-      message.error('获取空间列表失败：' + res.data.message)
+    if (res.data.code !== 0 || !res.data.data) {
+      throw new Error(res.data.message || '服务端返回异常')
     }
+    dataList.value = res.data.data.records ?? []
+    total.value = Number(res.data.data.total ?? 0)
   } catch (e: any) {
+    // 失败要清掉旧数据，否则上一次筛选的结果会留着像请求成功一样
+    dataList.value = []
+    total.value = 0
     message.error('获取空间列表失败：' + (e?.message ?? '网络错误'))
   } finally {
     loading.value = false

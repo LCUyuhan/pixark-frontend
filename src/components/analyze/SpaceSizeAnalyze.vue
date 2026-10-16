@@ -10,6 +10,7 @@ import { computed, ref, watchEffect } from 'vue'
 import VChart from 'vue-echarts'
 import { getSpaceSizeAnalyze } from '@/api/spaceAnalyzeController'
 import '@/plugins/echarts'
+import { useChartTheme } from '@/composables/useChartTheme'
 
 interface Props {
   spaceId?: string
@@ -49,9 +50,12 @@ watchEffect(fetchData)
 
 // 后端固定返回 4 段（含 0 值段），0 值扇区没面积却会占图例，直接滤掉。
 // 标签放扇区内部、图例移到右侧，避免外置标签引线画出卡片边界
+const chartTheme = useChartTheme()
+
 const options = computed(() => {
   const items = dataList.value.filter((item) => (item.count ?? 0) > 0)
   return {
+    textStyle: chartTheme.value.textStyle,
     tooltip: {
       trigger: 'item',
       formatter: (params: any) => `${params.name}：${params.value} 张（${params.percent}%）`,
