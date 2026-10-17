@@ -1,15 +1,17 @@
 <template>
   <div class="global-header">
     <div class="header-inner">
-      <!-- 品牌区：正式组合标志（图标 + 转曲文字标） -->
+      <!-- 品牌区：桌面用完整组合标志（图标 + PixArk.cloud + tagline）；
+           移动端用 compact 版（同一官方素材派生，仅去掉小到不可读的 tagline 行） -->
       <div class="brand" @click="router.push('/')">
-        <img class="wordmark-img" src="/brand/logo-wordmark-light.svg" alt="PixArk.cloud" />
+        <img class="wordmark-img wordmark-full" src="/brand/logo-wordmark-light.svg" alt="PixArk.cloud" />
+        <img class="wordmark-img wordmark-compact" src="/brand/logo-wordmark-light-compact.svg" alt="PixArk.cloud" />
       </div>
 
-      <!-- 桌面端导航 -->
+      <!-- 桌面端导航：常规项平铺，管理项收纳为下拉（管理员可见） -->
       <nav class="nav-desktop" aria-label="主导航">
         <a
-          v-for="item in menuItems"
+          v-for="item in mainItems"
           :key="item.key"
           class="nav-link"
           :class="{ active: selectedKeys.includes(item.key) }"
@@ -17,6 +19,20 @@
         >
           {{ item.label }}
         </a>
+        <a-dropdown v-if="adminItems.length" trigger="click">
+          <a class="nav-link admin-trigger" :class="{ active: isAdminRoute }">
+            管理
+            <DownOutlined class="admin-caret" />
+          </a>
+          <template #overlay>
+            <a-menu>
+              <a-menu-item v-for="item in adminItems" :key="item.key" @click="doMenuClick(item.key)">
+                <component :is="item.icon" v-if="item.icon" />
+                {{ item.label }}
+              </a-menu-item>
+            </a-menu>
+          </template>
+        </a-dropdown>
       </nav>
 
       <!-- 桌面端内嵌搜索：写入地址栏 query，首页监听后执行真实搜索 -->
@@ -93,7 +109,7 @@
 import { computed, h, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined, AuditOutlined, BulbOutlined, BulbFilled, SearchOutlined, MenuOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined, AuditOutlined, BulbOutlined, BulbFilled, SearchOutlined, MenuOutlined, DownOutlined } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { userLogout } from '@/api/userController'
@@ -104,13 +120,13 @@ const loginUserStore = useLoginUserStore()
 const themeStore = useThemeStore()
 const loginUser = computed(() => loginUserStore.loginUser)
 
-// 菜单项（管理类菜单仅管理员可见，与后端接口权限一致；我的空间仅普通用户可见）
+// 菜单项（管理类菜单仅管理员可见，与后端接口权限一致；「我的投稿」「我的空间」两类用户都可见）
 const originItems = [
   { key: '/', label: '首页', icon: () => h(HomeOutlined) },
   // 后端 /picture/upload 已对所有登录用户放开
   { key: '/add_picture', label: '上传图片', icon: () => h(PlusOutlined) },
-  { key: '/my_pictures', label: '我的投稿', icon: () => h(AuditOutlined), hideForAdmin: true },
-  { key: '/my_spaces', label: '我的空间', icon: () => h(FolderOutlined), hideForAdmin: true },
+  { key: '/my_pictures', label: '我的投稿', icon: () => h(AuditOutlined) },
+  { key: '/my_spaces', label: '我的空间', icon: () => h(FolderOutlined) },
   { key: '/admin/userManage', label: '用户管理', icon: () => h(UserOutlined), needAdmin: true },
   { key: '/admin/pictureManage', label: '图片管理', icon: () => h(PictureOutlined), needAdmin: true },
   { key: '/admin/spaceManage', label: '空间管理', icon: () => h(DatabaseOutlined), needAdmin: true },
@@ -124,12 +140,15 @@ const menuItems = computed(() =>
     if (item.needAdmin) {
       return loginUser.value.userRole === 'admin'
     }
-    if (item.hideForAdmin) {
-      return loginUser.value.userRole !== 'admin'
-    }
     return true
   }),
 )
+
+// 桌面端分层：常规项平铺，管理项收进"管理"下拉。menuItems 已按权限过滤，
+// 普通用户 adminItems 为空，下拉自然不渲染；抽屉菜单保持 menuItems 全量平铺
+const mainItems = computed(() => menuItems.value.filter((item) => !item.needAdmin))
+const adminItems = computed(() => menuItems.value.filter((item) => item.needAdmin))
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
 // 当前选中菜单（与路由同步）
 // 空间详情页是「我的空间」点进去的落地页（MySpacesPage 会 replace 到 /space/:id），
@@ -196,9 +215,19 @@ const doLogout = async () => {
 }
 
 .wordmark-img {
-  height: 26px;
   width: auto;
   display: block;
+}
+
+/* 桌面端：完整组合标志。SVG viewBox 353.61×104 ≈ 3.4:1，36px 高 ≈ 122px 宽。
+   导航栏恒为深色（#111318），白色字标单版本即可，无需随主题切换 */
+.wordmark-full {
+  height: 36px;
+}
+
+/* compact 版只在移动端出现（见下方媒体查询） */
+.wordmark-compact {
+  display: none;
 }
 
 /* ---- 桌面导航链接 ---- */
@@ -243,6 +272,17 @@ const doLogout = async () => {
   height: 2px;
   border-radius: 1px;
   background: #ffffff;
+}
+
+/* "管理"下拉触发器：与平铺链接同款样式，active 高亮复用 .nav-link.active 的下划线 */
+.admin-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-caret {
+  font-size: 10px;
 }
 
 /* ---- 桌面内嵌搜索 ---- */
@@ -357,6 +397,18 @@ const doLogout = async () => {
     padding: 0 16px;
   }
 
+  .wordmark-full {
+    /* 移动端隐藏含 tagline 的完整版（tagline 只占 viewBox 6%，30px 下糊成灰团） */
+    display: none;
+  }
+
+  .wordmark-compact {
+    /* compact viewBox 353.61×92 ≈ 3.84:1，32px 高 ≈ 123px 宽，
+       PixArk.cloud 主字标比旧版大一档，右侧仍留得下灯泡/头像/搜索/汉堡 */
+    display: block;
+    height: 32px;
+  }
+
   .nav-desktop,
   .search-desktop,
   .user-name {
@@ -365,6 +417,13 @@ const doLogout = async () => {
 
   .mobile-only {
     display: inline-flex;
+  }
+}
+
+/* 360px 以下窄屏（iPhone SE 一代等）：Logo 再收一档，避免与右侧按钮互相挤压 */
+@media (max-width: 360px) {
+  .wordmark-compact {
+    height: 28px;
   }
 }
 </style>

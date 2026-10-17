@@ -134,6 +134,11 @@ const onToggle = () => {
   box-shadow: 0 4px 14px var(--color-shadow-header);
 }
 
+/* 暗色下黑影落在近黑底上看不见，hover 改用浅灰描边保持可感知反馈 */
+.dark-theme .picture-card:hover .cover {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
 .picture-card:hover .cover img {
   /* 在框内轻微放大，替代原来"边框变蓝"的反馈 */
   transform: scale(1.025);

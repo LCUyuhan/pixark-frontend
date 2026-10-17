@@ -79,8 +79,8 @@ const router = createRouter({
       name: '我的投稿',
       component: MyPicturesPage,
       meta: {
-        // 仅普通用户可访问：管理员没有待审核内容，看自己的图走图片管理页
-        userOnly: true,
+        // 后端 /picture/my/list/page/vo 按登录用户过滤，未登录没有意义
+        loginRequired: true,
       },
     },
     {
@@ -88,8 +88,7 @@ const router = createRouter({
       name: '我的空间',
       component: MySpacesPage,
       meta: {
-        // 仅普通用户可访问（管理员无个人空间，重定向到空间管理）
-        userOnly: true,
+        loginRequired: true,
       },
     },
     {
@@ -98,7 +97,7 @@ const router = createRouter({
       component: SpaceDetailPage,
       meta: {
         // 后端私有空间分支要求「已登录 + 是空间归属人」，未登录进来只会拿到一串鉴权错误；
-        // 不加 userOnly：管理员同样打不开别人的空间，而越权访问别人的空间 id 只能由后端拦
+        // 越权访问别人的空间 id 由后端拦，前端不做归属判断
         loginRequired: true,
       },
     },

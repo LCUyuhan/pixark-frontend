@@ -28,11 +28,11 @@
     </section>
 
     <div class="page-body">
-      <!-- 分类：单行文字导航（可横向滚动），选中用黑字+下划线，不再用一排胶囊按钮 -->
+      <!-- 分类：主筛选轴，单选大胶囊，选中实心反色 -->
       <nav class="cat-nav" aria-label="图片分类">
         <button
           type="button"
-          class="cat-link"
+          class="chip"
           :class="{ active: activeCategory === 'all' }"
           @click="pickCategory('all')"
         >
@@ -42,7 +42,7 @@
           v-for="category in categoryList"
           :key="category"
           type="button"
-          class="cat-link"
+          class="chip"
           :class="{ active: activeCategory === category }"
           @click="pickCategory(category)"
         >
@@ -50,7 +50,8 @@
         </button>
       </nav>
 
-      <!-- 标签筛选：多选小胶囊，次级筛选，视觉刻意淡一档 -->
+      <!-- 标签：次级筛选，多选小胶囊，选中只加一档浅底。
+           右侧「清空」只在已选时出现，同时充当"这里可以多选"的提示 -->
       <div class="tag-row">
         <span class="row-label">标签</span>
         <div class="filter-chips">
@@ -59,13 +60,16 @@
             :key="tag"
             type="button"
             class="chip small"
-            :class="{ selected: selectedTagMap[index] }"
+            :class="{ active: selectedTagMap[index] }"
             :aria-pressed="!!selectedTagMap[index]"
             @click="toggleTag(index)"
           >
             {{ tag }}
           </button>
         </div>
+        <button v-if="selectedTagCount" type="button" class="clear-tags" @click="clearTags">
+          清空 {{ selectedTagCount }}
+        </button>
       </div>
 
       <!-- 区块标题：默认按创建时间倒序即"最新上传"；有筛选条件时是搜索结果 -->
@@ -150,6 +154,13 @@ const pickCategory = (category: string) => {
 
 const toggleTag = (index: number) => {
   selectedTagMap.value[index] = !selectedTagMap.value[index]
+  doSearch()
+}
+
+const selectedTagCount = computed(() => selectedTagMap.value.filter(Boolean).length)
+
+const clearTags = () => {
+  selectedTagMap.value = selectedTagMap.value.map(() => false)
   doSearch()
 }
 
@@ -303,15 +314,30 @@ onBeforeUnmount(() => {
   margin: 0 auto;
 }
 
+/*
+ * 脱离流：它只是"回到顶部"的 IntersectionObserver 锚点，不需要占布局。
+ * 若在流内占 1px，hero 的 -24px 负 margin 会先吃掉这 1px，
+ * 导航栏与 Hero 之间会漏出 1px content 底色（亮色下就是一条白线）。
+ */
 .top-anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
   height: 1px;
 }
 
-/* ---- Hero：负 margin 顶掉 content 内边距，实现全宽横幅。
+/* ---- Hero：顶部负 margin 顶掉 content 内边距，紧贴导航栏。
+   水平方向收进 1280 栅格，与导航菜单、分类、图墙左缘严格对齐（不再 bleed）。
    高度刻意收紧，不抢占图库内容的首屏空间 ---- */
 .hero {
-  margin: -24px -24px 24px;
+  /* 原来 -24px 把 hero 顶到和深色导航无缝相接，两块深色连成一整片，
+     首屏上半部分全是黑。改成留出一条页面底色 + 圆角，让它成为一个明确的面板，
+     「深色顶栏」才是唯一那条深色带 */
+  margin: 0 0 28px;
   padding: 40px 24px 36px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
   /* 构图对准山峰与湖面，避开顶部大面积暗色天空 */
   background-position: center 40%;
   background-size: cover;
@@ -408,11 +434,11 @@ onBeforeUnmount(() => {
   outline-offset: 2px;
 }
 
-/* ---- 分类：单行文字导航，横向滚动，黑字 + 下划线选中 ---- */
+/* ---- 分类行：单行胶囊，窄屏横向滚动 ---- */
 .cat-nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   margin-bottom: 12px;
   overflow-x: auto;
   scrollbar-width: none;
@@ -423,43 +449,45 @@ onBeforeUnmount(() => {
   display: none;
 }
 
-.cat-link {
-  position: relative;
+/* ---- 筛选胶囊：分类和标签共用一套语言，只靠尺寸和填充深浅分层级 ----
+   原来分类是「裸文字 + 下划线」、标签是描边胶囊，同层级的功能两套长相，
+   而且更重要的分类行反而最不像控件。 */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: none;
-  padding: 6px 10px;
-  border: none;
-  background: transparent;
-  font-size: 14px;
-  font-family: inherit;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-container);
   color: var(--color-text-secondary);
+  font-size: 13px;
+  font-family: inherit;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
-.cat-link:hover {
+.chip:hover {
+  border-color: var(--color-text-placeholder);
   color: var(--color-text);
 }
 
-.cat-link.active {
-  color: var(--color-text);
-  font-weight: 600;
-}
-
-.cat-link.active::after {
-  content: '';
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 0;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--color-text);
-}
-
-.cat-link:focus-visible {
+.chip:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
-  border-radius: 4px;
+}
+
+/* 单选轴选中用实心反色：文字色当底、容器色当字。
+   两套主题下自动都是「深底浅字」，所以不再需要 #4a4f58 加一条 .dark-theme 覆写 */
+.chip.active {
+  background: var(--color-text);
+  border-color: var(--color-text);
+  color: var(--color-bg-container);
 }
 
 .section-title {
@@ -481,7 +509,7 @@ onBeforeUnmount(() => {
   flex: none;
   padding-top: 5px;
   font-size: 12px;
-  color: var(--color-text-disabled);
+  color: var(--color-text-tertiary);
 }
 
 .filter-chips {
@@ -490,45 +518,48 @@ onBeforeUnmount(() => {
   gap: 8px;
 }
 
+/* 多选轴：小一档，且未选中时不填底，让它明显轻于分类行 */
 .chip.small {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
   height: 26px;
   padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid var(--color-border-secondary);
   background: transparent;
-  color: var(--color-text-tertiary);
   font-size: 12px;
-  font-family: inherit;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
 }
 
-.chip.small:hover {
-  border-color: var(--color-border);
+/* 选中只加一档浅底，不做实心反色 —— 同时选中好几个时满排黑药丸会盖过图片墙 */
+.chip.small.active {
+  background: var(--color-border-secondary);
+  border-color: transparent;
   color: var(--color-text);
 }
 
-.chip.small:focus-visible {
+/* 已选标签数 + 一键清空。它同时也是「这一行可以多选」的提示 */
+.clear-tags {
+  flex: none;
+  margin-left: 2px;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.clear-tags:hover {
+  color: var(--color-text);
+  background: var(--color-border-secondary);
+}
+
+.clear-tags:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-.chip.small.selected {
-  background: var(--color-primary-bg);
-  border-color: transparent;
-  color: var(--color-primary);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .chip.small,
-  .cat-link,
+  .chip,
+  .clear-tags,
   .search-pill-btn {
     transition: none;
   }
@@ -537,8 +568,11 @@ onBeforeUnmount(() => {
 /* ---- 移动端 ---- */
 @media (max-width: 768px) {
   .hero {
+    /* 左右恢复出血顶到屏幕边缘（抵消 content 的 16px padding），消除两侧灰条；
+       分类/标签/图墙仍留在 16px 内容边距内，不受影响 */
     margin: -16px -16px 20px;
-    padding: 32px 16px 28px;
+    /* 总高零增长的再分配：上下各收 4px，让给副标题与搜索框间距 */
+    padding: 28px 16px 24px;
   }
 
   .hero-title {
@@ -548,13 +582,15 @@ onBeforeUnmount(() => {
   }
 
   .hero-title-en {
+    margin-top: 8px;
     font-size: 14px;
     line-height: 20px;
   }
 
   .search-pill {
     height: 44px;
-    margin-top: 18px;
+    /* 18→26：文字区与搜索框之间更舒展，增量由上下 padding 各收 4px 承担 */
+    margin-top: 26px;
   }
 
   .search-pill-btn {

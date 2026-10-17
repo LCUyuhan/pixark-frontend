@@ -44,7 +44,7 @@ const tabs: Tab[] = [
 /**
  * 各 Tab 的落地路由，全部复用现有路由与权限逻辑：
  * - 上传：/add_picture 自带 loginRequired，未登录会被路由守卫送去登录页
- * - 空间：普通用户进「我的空间」；管理员没有个人空间，进「空间管理」（与桌面菜单同一口径）
+ * - 空间：两类用户都进「我的空间」；管理员另有「空间管理」，从桌面端管理下拉进入
  * - 我的：未登录进登录页
  */
 const targetOf = (tab: Tab): string => {
@@ -54,7 +54,7 @@ const targetOf = (tab: Tab): string => {
     case 'upload':
       return '/add_picture'
     case 'space':
-      return loginUser.value.userRole === 'admin' ? '/admin/spaceManage' : '/my_spaces'
+      return '/my_spaces'
     case 'me':
       return loginUser.value.id ? '/user/center' : '/user/login'
     default:

@@ -56,11 +56,15 @@ const selectableLevels = computed(() =>
   isAdmin.value ? spaceLevels.value : spaceLevels.value.filter((level) => level.value === 0),
 )
 
-/** 加载我的空间：已有则直接进入空间详情 */
+/**
+ * 加载我的空间：已有则直接进入空间详情。
+ * userId 必须显式传自己的：后端只对非管理员把条件强制覆盖成本人，管理员传什么就用什么，
+ * 少这一行管理员会拿到全站第一条空间，然后被下面的 replace 送进陌生人的空间里。
+ */
 const fetchMySpace = async () => {
   loading.value = true
   try {
-    const res = await listSpaceByPage({ current: 1, pageSize: 1 })
+    const res = await listSpaceByPage({ current: 1, pageSize: 1, userId: loginUserStore.loginUser.id })
     if (res.data.code === 0 && res.data.data) {
       mySpace.value = res.data.data.records?.[0]
       if (mySpace.value) {
