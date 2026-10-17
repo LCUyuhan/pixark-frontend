@@ -35,15 +35,6 @@
         </a-dropdown>
       </nav>
 
-      <!-- 桌面端内嵌搜索：写入地址栏 query，首页监听后执行真实搜索 -->
-      <div class="search-desktop">
-        <a-input-search
-          v-model:value="navSearchText"
-          placeholder="搜索图片、标签、用户…"
-          @search="doNavSearch"
-        />
-      </div>
-
       <div class="right">
         <a-tooltip :title="themeStore.isDark ? '切换到亮色' : '切换到暗色'">
           <a-button type="text" class="icon-btn" aria-label="切换明暗主题" @click="themeStore.toggleTheme()">
@@ -77,10 +68,7 @@
         <!-- 未登录：白底深色字按钮，在深色导航上保持可辨认 -->
         <a-button v-else class="login-btn" @click="router.push('/user/login')">登录</a-button>
 
-        <!-- 移动端：搜索入口 + 汉堡菜单 -->
-        <a-button type="text" class="icon-btn mobile-only" aria-label="搜索" @click="goSearch">
-          <template #icon><SearchOutlined /></template>
-        </a-button>
+        <!-- 移动端：汉堡菜单 -->
         <a-button type="text" class="icon-btn mobile-only" aria-label="打开菜单" @click="drawerOpen = true">
           <template #icon><MenuOutlined /></template>
         </a-button>
@@ -109,7 +97,7 @@
 import { computed, h, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined, AuditOutlined, BulbOutlined, BulbFilled, SearchOutlined, MenuOutlined, DownOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined, AuditOutlined, BulbOutlined, BulbFilled, MenuOutlined, DownOutlined } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { userLogout } from '@/api/userController'
@@ -161,20 +149,6 @@ const drawerOpen = ref(false)
 const doMenuClick = (key: string) => {
   drawerOpen.value = false
   router.push(key)
-}
-
-// ---- 导航栏搜索 ----
-const navSearchText = ref('')
-
-/** 写入地址栏 query 并回首页；首页监听 query 变化后执行搜索（数据流只有一条） */
-const doNavSearch = () => {
-  const text = navSearchText.value.trim()
-  router.push({ path: '/', query: text ? { searchText: text } : {} })
-}
-
-/** 移动端搜索图标：回首页并让首页聚焦 Hero 搜索框 */
-const goSearch = () => {
-  router.push({ path: '/', query: { ...route.query, focus: 'search' } })
 }
 
 /** 退出登录 */
@@ -285,46 +259,12 @@ const doLogout = async () => {
   font-size: 10px;
 }
 
-/* ---- 桌面内嵌搜索 ---- */
-.search-desktop {
-  flex: 1;
-  max-width: 320px;
-  margin-left: auto;
-}
-
-.search-desktop :deep(.ant-input) {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: transparent;
-  color: var(--color-text-on-dark);
-}
-
-.search-desktop :deep(.ant-input::placeholder) {
-  color: var(--color-text-on-dark-secondary);
-}
-
-.search-desktop :deep(.ant-input:hover),
-.search-desktop :deep(.ant-input:focus) {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: transparent;
-  box-shadow: none;
-}
-
-.search-desktop :deep(.ant-input-search-button) {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: transparent;
-  color: var(--color-text-on-dark);
-}
-
-.search-desktop :deep(.ant-input-search-button:hover) {
-  background: rgba(255, 255, 255, 0.24);
-  border-color: transparent;
-}
-
 .right {
   display: flex;
   align-items: center;
   gap: 4px;
   flex: none;
+  margin-left: auto;
 }
 
 .icon-btn {
@@ -404,13 +344,12 @@ const doLogout = async () => {
 
   .wordmark-compact {
     /* compact viewBox 353.61×92 ≈ 3.84:1，32px 高 ≈ 123px 宽，
-       PixArk.cloud 主字标比旧版大一档，右侧仍留得下灯泡/头像/搜索/汉堡 */
+       PixArk.cloud 主字标比旧版大一档，右侧仍留得下灯泡/头像/汉堡 */
     display: block;
     height: 32px;
   }
 
   .nav-desktop,
-  .search-desktop,
   .user-name {
     display: none;
   }

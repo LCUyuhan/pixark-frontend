@@ -84,7 +84,14 @@
         infinite
         @click="doClickPicture"
         @load-more="onLoadMore"
-      />
+      >
+        <template #end>
+          <p v-if="showLoginGate" class="login-gate">
+            <a @click="goRegister">注册</a> 或 <a @click="goLogin">登录</a>可查看更优质内容哦~
+          </p>
+          <span v-else class="list-end-hint">没有更多了</span>
+        </template>
+      </PictureListView>
     </div>
 
     <a-float-button v-if="showBackTop" tooltip="回到顶部" class="back-top" @click="scrollToTop">
@@ -102,10 +109,12 @@ import { message } from 'ant-design-vue'
 import { ArrowRightOutlined, SearchOutlined, VerticalAlignTopOutlined } from '@ant-design/icons-vue'
 import { listPictureTagCategory, listPictureVOByPage } from '@/api/pictureController'
 import PictureListView from '@/components/PictureListView.vue'
+import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import heroBg from '@/assets/hero-mountain.jpg'
 
 const router = useRouter()
 const route = useRoute()
+const loginUserStore = useLoginUserStore()
 
 // 查询参数（对应后端 PictureQueryRequest）。页码不放这里，单独用 page 管，
 // 避免出现"两个地方都记着当前第几页"——回退时很容易只改一个
@@ -113,8 +122,6 @@ const searchParams = reactive<Omit<API.PictureQueryRequest, 'current'>>({
   pageSize: 20,
   sortField: 'createTime',
   sortOrder: 'descend',
-  // 地址栏带 searchText 进来（导航栏搜索写入）时，先同步进搜索框
-  searchText: typeof route.query.searchText === 'string' ? route.query.searchText : undefined,
 })
 
 /** 当前页码，无限滚动的唯一真源 */
@@ -127,7 +134,16 @@ const loading = ref(false)
 /** 追加下一页，和 loading 分开：两者对失败的处理完全不同 */
 const loadingMore = ref(false)
 
-const hasMore = computed(() => dataList.value.length < total.value)
+/** 上一页返回不足一页：要么被游客上限截断，要么本来就是最后一页 */
+const shortPage = ref(false)
+
+const isGuest = computed(() => !loginUserStore.loginUser.id)
+const hasMore = computed(() => dataList.value.length < total.value && !shortPage.value)
+/** 库里还有图、但服务端不给更多了 —— 这才是登录引导，不是真的到底 */
+const showLoginGate = computed(() => isGuest.value && shortPage.value && dataList.value.length < total.value)
+
+const goLogin = () => router.push('/user/login?redirect=/')
+const goRegister = () => router.push('/user/register')
 
 // 分类与标签
 const categoryList = ref<string[]>([])
@@ -203,9 +219,12 @@ const fetchPage = async (append: boolean) => {
       throw new Error(res.data.message || '服务端返回异常')
     }
     const records = res.data.data.records ?? []
+    shortPage.value = records.length < (params.pageSize ?? 20)
     dataList.value = append ? [...dataList.value, ...records] : records
     total.value = Number(res.data.data.total ?? 0)
   } catch (e: any) {
+    // 请求失败不等于到顶，别让上一次的状态冒充"游客被截断"
+    shortPage.value = false
     if (append) {
       // 不回退页码的话 current 会一路涨，中间留下永远取不到的空洞
       page.value = Math.max(1, page.value - 1)
@@ -230,21 +249,8 @@ const doSearch = () => {
   fetchPage(false)
 }
 
-// ---- 地址栏 query 同步（导航栏搜索 / 移动端搜索 Tab 的入口）----
+// ---- 地址栏 query 同步（移动端搜索 Tab 的入口）----
 const searchInputRef = ref()
-
-// 导航栏搜索把关键词写进 ?searchText=，这里监听后执行搜索；
-// 和首页自己发起的搜索共用同一条数据流，不会出现"两个搜索框状态各管各的"
-watch(
-  () => route.query.searchText,
-  (val) => {
-    const text = typeof val === 'string' ? val : ''
-    if (text !== (searchParams.searchText ?? '')) {
-      searchParams.searchText = text
-      doSearch()
-    }
-  },
-)
 
 // 移动端底部"搜索"Tab 带 ?focus=search 进来：回顶、聚焦 Hero 搜索框，并同步清掉 query
 // （先 replace 再聚焦，避免地址栏残留；直接带 query 打开页面时 onMounted 里也补一次）
@@ -606,5 +612,27 @@ onBeforeUnmount(() => {
   .back-top {
     bottom: calc(72px + env(safe-area-inset-bottom));
   }
+}
+
+/* 游客触限：图墙末尾一行登录引导 */
+.login-gate {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.login-gate a {
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.login-gate a:hover {
+  text-decoration: underline;
+}
+
+.list-end-hint {
+  font-size: 12px;
+  color: var(--color-text-disabled);
 }
 </style>

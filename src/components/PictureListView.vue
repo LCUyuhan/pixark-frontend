@@ -54,7 +54,9 @@
       <!-- 触底哨兵与状态行 -->
       <div v-if="infinite" ref="sentinelRef" class="list-sentinel">
         <a-spin v-if="loadingMore" size="small" />
-        <span v-else-if="!hasMore && pictures.length" class="no-more">没有更多了</span>
+        <slot v-else-if="!hasMore && pictures.length" name="end">
+          <span class="no-more">没有更多了</span>
+        </slot>
       </div>
     </a-spin>
   </div>
