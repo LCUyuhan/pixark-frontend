@@ -8,7 +8,19 @@
     <div class="cover" :style="{ height: height + 'px' }">
       <!-- 列表一律加载缩略图，无缩略图时回退原图。
            不要加 ?${Date.now()} 之类的缓存串，那会让每次重渲染都重新下一遍图 -->
-      <img :src="picture.thumbnailUrl || picture.url" :alt="picture.name" loading="lazy" decoding="async" />
+      <img
+        v-if="!loadError"
+        :src="picture.thumbnailUrl || picture.url"
+        :alt="picture.name"
+        loading="lazy"
+        decoding="async"
+        @error="loadError = true"
+      />
+      <!-- 加载失败的统一占位：品牌状态插画，不显示破图 -->
+      <div v-else class="cover-fallback">
+        <img class="fallback-img" :src="loadFailImg" alt="" />
+        <span class="fallback-text">图片加载失败</span>
+      </div>
 
       <a-checkbox
         v-if="selectable"
@@ -30,17 +42,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import loadFailImg from '@/assets/states/state-load-fail.svg'
 
 interface Props {
   picture: API.PictureVO
-  /** 由 justifiedLayout 算出的实际宽度 */
+  /** 所在瀑布流列的宽度（同一断点下所有卡片一致） */
   width: number
-  /** 图片区高度，标题区在它下方且高度固定，所以整行仍然对齐 */
+  /** 图片区高度，按图片真实宽高比换算；标题区在它下方 */
   height: number
   selectable?: boolean
   selected?: boolean
-  /** 批量模式下隐藏操作按钮，与改造前的行为一致 */
+  /** 批量模式下隐藏操作按钮 */
   showActions?: boolean
 }
 
@@ -51,6 +64,9 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{ click: [picture: API.PictureVO]; toggleSelect: [id: number | string] }>()
+
+/** 缩略图加载失败：换成统一占位，同一批数据里只记当前这张 */
+const loadError = ref(false)
 
 const onClick = () => emit('click', props.picture)
 
@@ -78,7 +94,7 @@ const onToggle = () => {
   position: relative;
   overflow: hidden;
   display: flex;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-bg-layout);
   transition: box-shadow 0.2s ease;
 }
@@ -90,6 +106,28 @@ const onToggle = () => {
   object-fit: cover;
   display: block;
   transition: transform 0.25s ease;
+}
+
+/* 加载失败占位：和图片同高，灰底品牌插画居中 */
+.cover-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--color-text-disabled);
+  background: var(--color-bg-subtle);
+}
+
+.fallback-img {
+  width: 72px;
+  height: auto;
+}
+
+.fallback-text {
+  font-size: 12px;
 }
 
 .picture-card:hover .cover {

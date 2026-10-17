@@ -41,6 +41,7 @@ import { message } from 'ant-design-vue'
 import { computed, ref, watchEffect } from 'vue'
 import { getSpaceUsageAnalyze } from '@/api/spaceAnalyzeController'
 import { formatSize } from '@/utils'
+import { useChartTheme } from '@/composables/useChartTheme'
 
 interface Props {
   spaceId?: string
@@ -86,6 +87,8 @@ const worstRatio = computed(() => {
   return Math.max(size, count)
 })
 
+const chartTheme = useChartTheme()
+
 const ratioColor = computed(() => {
   if (!hasQuota.value) {
     return '#bfbfbf'
@@ -93,7 +96,8 @@ const ratioColor = computed(() => {
   if (worstRatio.value >= 90) {
     return '#ff4d4f'
   }
-  return worstRatio.value >= 70 ? '#faad14' : '#1677ff'
+  // 红/黄是语义告警色，保留；常态用量色跟品牌主色走
+  return worstRatio.value >= 70 ? '#faad14' : chartTheme.value.seriesColor
 })
 
 const quotaText = computed(() => {

@@ -84,7 +84,7 @@
 
         <!-- 颜色搜索 -->
         <div class="color-row">
-          <span style="color: rgba(0, 0, 0, 0.65)">按颜色搜：</span>
+          <span style="color: var(--color-text-secondary)">按颜色搜：</span>
           <span
             v-for="c in presetColors"
             :key="c"
@@ -113,7 +113,7 @@
     <!-- 颜色搜索结果 -->
     <template v-if="colorMode">
       <a-space style="margin-bottom: 12px">
-        <a-tag color="purple">颜色搜索结果（按相似度前 12）</a-tag>
+        <a-tag>颜色搜索结果（按相似度前 12）</a-tag>
         <a-button size="small" @click="colorMode = false">返回图片列表</a-button>
       </a-space>
       <PictureListView :pictures="colorResults" :loading="colorLoading" :lazy-rows="false" @click="goDetail" />
@@ -187,7 +187,7 @@
           <a-input v-model:value="batchRenameForm.nameRule" placeholder="如：图片_{序号}" />
         </a-form-item>
         <a-form-item :wrapper-col="{ offset: 5, span: 18 }">
-          <span style="color: rgba(0, 0, 0, 0.45); font-size: 12px">
+          <span style="color: var(--color-text-tertiary); font-size: 12px">
             支持 {序号} 占位符，从 1 开始递增，如"图片_{序号}"→ 图片_1、图片_2
           </span>
         </a-form-item>
@@ -226,7 +226,8 @@ const space = ref<API.SpaceVO>()
 const spaceLevels = ref<API.SpaceLevel[]>([])
 
 const levelText = (level?: number) => spaceLevels.value.find((l) => l.value === level)?.text ?? '未知'
-const levelColor = (level?: number) => (level === 0 ? 'blue' : level === 1 ? 'orange' : level === 2 ? 'purple' : 'default')
+// 级别 tag 不用彩色：级别语义已由文字表达，彩色在黑白灰体系里只是噪音
+const levelColor = (level?: number) => (level === 2 ? 'gold' : 'default')
 
 // ===== 列表与搜索 =====
 const searchParams = reactive<API.PictureQueryRequest>({
@@ -326,7 +327,7 @@ const doResetSearch = () => {
 
 // ===== 颜色搜索 =====
 const presetColors = ['#FF0000', '#FFA500', '#FFFF00', '#008000', '#0000FF', '#4B0082', '#7E3BF0', '#000000', '#FFFFFF']
-const customColor = ref('#1677ff')
+const customColor = ref('#17191D')
 const colorMode = ref(false)
 const colorResults = ref<API.PictureVO[]>([])
 const colorLoading = ref(false)

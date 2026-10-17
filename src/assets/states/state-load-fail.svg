@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="180" viewBox="0 0 240 180" fill="none" role="img" aria-label="图片加载失败">
+  <g stroke="#A7ABB2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M78 113
+      C67 113 60 105 60 95
+      C60 84 68 76 79 75
+      C81 61 92 51 107 51
+      C122 51 133 62 135 76
+      C147 77 157 86 157 98
+      C157 107 149 114 138 114
+      H78 Z"/>
+    <circle cx="101.5" cy="86.5" r="2.5" fill="#A7ABB2" stroke="none"/>
+    <circle cx="126" cy="86.5" r="2.5" fill="#A7ABB2" stroke="none"/>
+    <path d="M108 99 Q118.5 91.5 129 99"/>
+  </g>
+</svg>

@@ -43,7 +43,7 @@
             </a-avatar>
           </template>
           <template v-else-if="column.dataIndex === 'userRole'">
-            <a-tag :color="record.userRole === 'admin' ? 'green' : 'blue'">
+            <a-tag :color="record.userRole === 'admin' ? 'gold' : 'default'">
               {{ record.userRole }}
             </a-tag>
           </template>

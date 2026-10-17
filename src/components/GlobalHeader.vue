@@ -1,58 +1,99 @@
 <template>
   <div class="global-header">
-    <div class="left" @click="router.push('/')">
-      <span class="title">智能协同云图库</span>
-    </div>
+    <div class="header-inner">
+      <!-- 品牌区：正式组合标志（图标 + 转曲文字标） -->
+      <div class="brand" @click="router.push('/')">
+        <img class="wordmark-img" src="/brand/logo-wordmark-light.svg" alt="PixArk.cloud" />
+      </div>
 
-    <a-menu
-      class="menu"
-      mode="horizontal"
-      :selected-keys="selectedKeys"
-      :items="menuItems"
-      @click="doMenuClick"
-    />
+      <!-- 桌面端导航 -->
+      <nav class="nav-desktop" aria-label="主导航">
+        <a
+          v-for="item in menuItems"
+          :key="item.key"
+          class="nav-link"
+          :class="{ active: selectedKeys.includes(item.key) }"
+          @click="doMenuClick(item.key)"
+        >
+          {{ item.label }}
+        </a>
+      </nav>
 
-    <div class="right">
-      <a-tooltip :title="themeStore.isDark ? '切换到亮色' : '切换到暗色'">
-        <a-button type="text" aria-label="切换明暗主题" @click="themeStore.toggleTheme()">
-          <template #icon>
-            <BulbFilled v-if="themeStore.isDark" />
-            <BulbOutlined v-else />
+      <!-- 桌面端内嵌搜索：写入地址栏 query，首页监听后执行真实搜索 -->
+      <div class="search-desktop">
+        <a-input-search
+          v-model:value="navSearchText"
+          placeholder="搜索图片、标签、用户…"
+          @search="doNavSearch"
+        />
+      </div>
+
+      <div class="right">
+        <a-tooltip :title="themeStore.isDark ? '切换到亮色' : '切换到暗色'">
+          <a-button type="text" class="icon-btn" aria-label="切换明暗主题" @click="themeStore.toggleTheme()">
+            <template #icon>
+              <BulbFilled v-if="themeStore.isDark" />
+              <BulbOutlined v-else />
+            </template>
+          </a-button>
+        </a-tooltip>
+        <!-- 已登录：显示用户名下拉菜单 -->
+        <a-dropdown v-if="loginUser.id">
+          <a-space class="user-info">
+            <a-avatar :src="loginUser.userAvatar">
+              {{ loginUser.userName?.[0] ?? loginUser.userAccount?.[0] }}
+            </a-avatar>
+            <span class="user-name">{{ loginUser.userName ?? '无名' }}</span>
+          </a-space>
+          <template #overlay>
+            <a-menu>
+              <a-menu-item key="center" @click="router.push('/user/center')">
+                <UserOutlined />
+                个人中心
+              </a-menu-item>
+              <a-menu-item key="logout" @click="doLogout">
+                <LogoutOutlined />
+                退出登录
+              </a-menu-item>
+            </a-menu>
           </template>
+        </a-dropdown>
+        <!-- 未登录：白底深色字按钮，在深色导航上保持可辨认 -->
+        <a-button v-else class="login-btn" @click="router.push('/user/login')">登录</a-button>
+
+        <!-- 移动端：搜索入口 + 汉堡菜单 -->
+        <a-button type="text" class="icon-btn mobile-only" aria-label="搜索" @click="goSearch">
+          <template #icon><SearchOutlined /></template>
         </a-button>
-      </a-tooltip>
-      <!-- 已登录：显示用户名下拉菜单 -->
-      <a-dropdown v-if="loginUser.id">
-        <a-space class="user-info">
-          <a-avatar :src="loginUser.userAvatar">
-            {{ loginUser.userName?.[0] ?? loginUser.userAccount?.[0] }}
-          </a-avatar>
-          {{ loginUser.userName ?? '无名' }}
-        </a-space>
-        <template #overlay>
-          <a-menu>
-            <a-menu-item key="center" @click="router.push('/user/center')">
-              <UserOutlined />
-              个人中心
-            </a-menu-item>
-            <a-menu-item key="logout" @click="doLogout">
-              <LogoutOutlined />
-              退出登录
-            </a-menu-item>
-          </a-menu>
-        </template>
-      </a-dropdown>
-      <!-- 未登录：显示登录按钮 -->
-      <a-button v-else type="primary" @click="router.push('/user/login')">登录</a-button>
+        <a-button type="text" class="icon-btn mobile-only" aria-label="打开菜单" @click="drawerOpen = true">
+          <template #icon><MenuOutlined /></template>
+        </a-button>
+      </div>
     </div>
+
+    <!-- 移动端抽屉菜单：与桌面导航同一套权限过滤后的菜单项 -->
+    <a-drawer v-model:open="drawerOpen" placement="right" :width="264" title="菜单">
+      <div class="drawer-nav">
+        <a
+          v-for="item in menuItems"
+          :key="item.key"
+          class="drawer-link"
+          :class="{ active: selectedKeys.includes(item.key) }"
+          @click="doMenuClick(item.key)"
+        >
+          <component :is="item.icon" v-if="item.icon" />
+          {{ item.label }}
+        </a>
+      </div>
+    </a-drawer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, h } from 'vue'
+import { computed, h, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined, AuditOutlined, BulbOutlined, BulbFilled } from '@ant-design/icons-vue'
+import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined, AuditOutlined, BulbOutlined, BulbFilled, SearchOutlined, MenuOutlined } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { userLogout } from '@/api/userController'
@@ -65,9 +106,9 @@ const loginUser = computed(() => loginUserStore.loginUser)
 
 // 菜单项（管理类菜单仅管理员可见，与后端接口权限一致；我的空间仅普通用户可见）
 const originItems = [
-  { key: '/', label: '主页', icon: () => h(HomeOutlined) },
+  { key: '/', label: '首页', icon: () => h(HomeOutlined) },
   // 后端 /picture/upload 已对所有登录用户放开
-  { key: '/add_picture', label: '创建图片', icon: () => h(PlusOutlined) },
+  { key: '/add_picture', label: '上传图片', icon: () => h(PlusOutlined) },
   { key: '/my_pictures', label: '我的投稿', icon: () => h(AuditOutlined), hideForAdmin: true },
   { key: '/my_spaces', label: '我的空间', icon: () => h(FolderOutlined), hideForAdmin: true },
   { key: '/admin/userManage', label: '用户管理', icon: () => h(UserOutlined), needAdmin: true },
@@ -96,8 +137,25 @@ const menuItems = computed(() =>
 const menuKeyOf = (path: string) => (path.startsWith('/space/') ? '/my_spaces' : path)
 const selectedKeys = computed(() => [menuKeyOf(route.path)])
 
-const doMenuClick = ({ key }: { key: string }) => {
+const drawerOpen = ref(false)
+
+const doMenuClick = (key: string) => {
+  drawerOpen.value = false
   router.push(key)
+}
+
+// ---- 导航栏搜索 ----
+const navSearchText = ref('')
+
+/** 写入地址栏 query 并回首页；首页监听 query 变化后执行搜索（数据流只有一条） */
+const doNavSearch = () => {
+  const text = navSearchText.value.trim()
+  router.push({ path: '/', query: text ? { searchText: text } : {} })
+}
+
+/** 移动端搜索图标：回首页并让首页聚焦 Hero 搜索框 */
+const goSearch = () => {
+  router.push({ path: '/', query: { ...route.query, focus: 'search' } })
 }
 
 /** 退出登录 */
@@ -114,80 +172,199 @@ const doLogout = async () => {
 </script>
 
 <style scoped>
+/* 深色导航在亮/暗两种主题下都保持深色（品牌规范），所以颜色全部用 on-dark 令牌，不随主题翻 */
 .global-header {
+  height: var(--nav-height);
+  background: var(--color-bg-nav);
+}
+
+.header-inner {
   display: flex;
   align-items: center;
+  gap: 24px;
+  height: 100%;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
   padding: 0 24px;
 }
 
-.left {
+.brand {
+  display: flex;
+  align-items: center;
+  flex: none;
   cursor: pointer;
-  margin-right: 32px;
 }
 
-.title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--color-primary);
+.wordmark-img {
+  height: 26px;
+  width: auto;
+  display: block;
 }
 
-.menu {
-  flex: 1;
+/* ---- 桌面导航链接 ---- */
+.nav-desktop {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   min-width: 0;
-  border-bottom: none;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-/* ---- 选中态改成浅色胶囊，去掉下划线 ----
-   ADV 4.2.6 的下划线是 .ant-menu-item::after 的 border-bottom，
-   而且 hover / active / open / selected 共用同一条（menu/style/theme.js:138-152），
-   所以先把伪元素整个关掉，再用背景色区分状态。
-   注意：.ant-menu-horizontal 和 .menu 是同一个 ul 元素，不能写进 :deep() 里当后代选择器 */
-.menu :deep(.ant-menu-item::after),
-.menu :deep(.ant-menu-submenu::after) {
-  display: none !important;
+.nav-desktop::-webkit-scrollbar {
+  display: none;
 }
 
-.menu :deep(.ant-menu-item),
-.menu :deep(.ant-menu-submenu) {
-  top: 0;
-  margin: 12px 2px;
-  height: 40px;
-  line-height: 40px;
-  vertical-align: top;
-  padding-inline: 14px;
-  border-radius: 8px;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+.nav-link {
+  position: relative;
+  flex: none;
+  padding: 6px 12px;
+  font-size: 14px;
+  color: var(--color-text-on-dark-secondary);
+  cursor: pointer;
+  transition: color 0.2s ease;
 }
 
-/* 选中：底色 + 文字色 + 字重三个通道，不只靠颜色 */
-.menu :deep(.ant-menu-item-selected) {
-  color: var(--color-primary);
+.nav-link:hover {
+  color: var(--color-text-on-dark);
+}
+
+.nav-link.active {
+  color: var(--color-text-on-dark);
   font-weight: 600;
-  background-color: var(--color-primary-bg);
 }
 
-/* hover：浅灰底，和选中的蓝底明显区分 */
-.menu :deep(.ant-menu-item:not(.ant-menu-item-selected):hover),
-.menu :deep(.ant-menu-item-active:not(.ant-menu-item-selected)) {
-  color: var(--color-text);
-  background-color: var(--color-bg-layout);
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -2px;
+  height: 2px;
+  border-radius: 1px;
+  background: #ffffff;
 }
 
-/* 键盘导航要能看出焦点在哪 */
-.menu :deep(.ant-menu-item:focus-visible) {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+/* ---- 桌面内嵌搜索 ---- */
+.search-desktop {
+  flex: 1;
+  max-width: 320px;
+  margin-left: auto;
+}
+
+.search-desktop :deep(.ant-input) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: transparent;
+  color: var(--color-text-on-dark);
+}
+
+.search-desktop :deep(.ant-input::placeholder) {
+  color: var(--color-text-on-dark-secondary);
+}
+
+.search-desktop :deep(.ant-input:hover),
+.search-desktop :deep(.ant-input:focus) {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.search-desktop :deep(.ant-input-search-button) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: transparent;
+  color: var(--color-text-on-dark);
+}
+
+.search-desktop :deep(.ant-input-search-button:hover) {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: transparent;
 }
 
 .right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  flex: none;
+}
+
+.icon-btn {
+  color: var(--color-text-on-dark-secondary);
+}
+
+.icon-btn:hover {
+  color: var(--color-text-on-dark) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
 }
 
 .user-info {
   cursor: pointer;
+  color: var(--color-text-on-dark);
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.user-info:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.login-btn {
+  background: #ffffff;
+  border: none;
+  color: #17191d;
+  font-weight: 500;
+}
+
+.login-btn:hover,
+.login-btn:focus {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #17191d !important;
+}
+
+/* ---- 移动端抽屉菜单 ---- */
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.drawer-link:hover {
+  background: var(--color-bg-layout);
+}
+
+.drawer-link.active {
+  font-weight: 600;
+  background: var(--color-primary-bg);
+}
+
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .header-inner {
+    gap: 12px;
+    padding: 0 16px;
+  }
+
+  .nav-desktop,
+  .search-desktop,
+  .user-name {
+    display: none;
+  }
+
+  .mobile-only {
+    display: inline-flex;
+  }
 }
 </style>

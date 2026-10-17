@@ -16,15 +16,16 @@ import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import BasicLayout from '@/layouts/BasicLayout.vue'
-import { THEME_SEED } from '@/constants/theme'
+import { THEME_SEED, THEME_SEED_DARK } from '@/constants/theme'
 import { useThemeStore } from '@/stores/useThemeStore'
 
 dayjs.locale('zh-cn')
 
 const themeStore = useThemeStore()
 
+// 主色随主题翻转：亮色近黑、暗色浅灰（色板本身是黑白灰，算法只负责派生梯度）
 const themeConfig = computed(() => ({
-  token: { ...THEME_SEED },
+  token: themeStore.isDark ? { ...THEME_SEED_DARK } : { ...THEME_SEED },
   algorithm: themeStore.isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
 }))
 </script>

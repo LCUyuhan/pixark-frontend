@@ -14,6 +14,7 @@ import { computed, ref, watchEffect } from 'vue'
 import VChart from 'vue-echarts'
 import { getSpaceTagAnalyze } from '@/api/spaceAnalyzeController'
 import '@/plugins/echarts'
+import { useChartTheme } from '@/composables/useChartTheme'
 
 interface Props {
   spaceId?: string
@@ -49,21 +50,22 @@ const fetchData = async () => {
   }
 }
 
-// 同一色相分四档深浅：颜色在这里承载"热度"信息，而不是装饰
-const HEAT_COLORS = ['#1677ff', '#4096ff', '#91caff', '#d6e8ff']
+const chartTheme = useChartTheme()
 
+// 同一色相分四档深浅：颜色在这里承载"热度"信息，而不是装饰。档位随主题翻（canvas 读不到 CSS 变量）
 const colorOf = (count: number, max: number) => {
+  const colors = chartTheme.value.heatColors
   if (!max) {
-    return HEAT_COLORS[3]
+    return colors[3]
   }
   const ratio = count / max
   if (ratio >= 0.6) {
-    return HEAT_COLORS[0]
+    return colors[0]
   }
   if (ratio >= 0.35) {
-    return HEAT_COLORS[1]
+    return colors[1]
   }
-  return ratio >= 0.15 ? HEAT_COLORS[2] : HEAT_COLORS[3]
+  return ratio >= 0.15 ? colors[2] : colors[3]
 }
 
 const options = computed(() => {

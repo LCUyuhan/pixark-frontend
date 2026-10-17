@@ -8,16 +8,26 @@
       <router-view :key="route.path" />
     </a-layout-content>
     <a-layout-footer class="footer">
-      智能协同云图库
+      <div class="footer-inner">
+        <div class="footer-brand" @click="router.push('/')">
+          <img class="footer-wordmark on-light" src="/brand/logo-wordmark-dark.svg" alt="PixArk.cloud" />
+          <img class="footer-wordmark on-dark" src="/brand/logo-wordmark-light.svg" alt="" aria-hidden="true" />
+        </div>
+        <p class="footer-tagline">Your Visual Universe · 用像素，承载无限的想象。</p>
+        <p class="footer-copy">© 2026 PixArk.cloud. All rights reserved.</p>
+      </div>
     </a-layout-footer>
+    <MobileTabBar />
   </a-layout>
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import GlobalHeader from '@/components/GlobalHeader.vue'
+import MobileTabBar from '@/components/MobileTabBar.vue'
 
 const route = useRoute()
+const router = useRouter()
 </script>
 
 <style scoped>
@@ -28,7 +38,6 @@ const route = useRoute()
 .footer {
   transition:
     background-color 0.25s ease,
-    box-shadow 0.25s ease,
     color 0.25s ease;
 }
 
@@ -38,8 +47,9 @@ const route = useRoute()
 
 .header {
   padding: 0;
-  background: var(--color-bg-container);
-  box-shadow: 0 2px 8px var(--color-shadow-header);
+  height: var(--nav-height);
+  line-height: normal;
+  background: var(--color-bg-nav);
 }
 
 .content {
@@ -48,9 +58,68 @@ const route = useRoute()
 }
 
 .footer {
-  text-align: center;
   background: var(--color-bg-footer);
-  padding: 16px;
+  border-top: 1px solid var(--color-border-secondary);
+  padding: 32px 24px;
+}
+
+.footer-inner {
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.footer-wordmark {
+  height: 24px;
+  width: auto;
+  display: block;
+}
+
+/* 页脚在暗色主题下也是深色底，组合标志要换成浅色版 */
+.on-dark {
+  display: none;
+}
+
+/*
+ * 这里不能用 :global()。scoped 转换器只把 [data-v-x] 加在最后一个复合选择器上，
+ * 祖先 .dark-theme 本来就不会被加作用域，直接写后代即可。
+ * 写成 :global(.dark-theme) .on-dark 时转换器会把后代整段丢掉，规则退化成裸的
+ * .dark-theme —— 而这个类挂在 <html> 上，等于给根元素设 display:none，整页塌成 0×0。
+ */
+.dark-theme .on-dark {
+  display: block;
+}
+
+.dark-theme .on-light {
+  display: none;
+}
+
+.footer-tagline {
+  margin: 10px 0 4px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.footer-copy {
+  margin: 0;
+  font-size: 12px;
   color: var(--color-text-tertiary);
+}
+
+/* 移动端：收窄页边距，底部给 Tab Bar 让位（含安全区） */
+@media (max-width: 768px) {
+  .content {
+    padding: 16px 16px calc(88px + env(safe-area-inset-bottom));
+  }
+
+  .footer {
+    padding: 24px 16px;
+  }
 }
 </style>

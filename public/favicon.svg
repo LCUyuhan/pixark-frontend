@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 74 88" role="img" aria-labelledby="title">
+  <title id="title">PixArk pixel P</title>
+  <g transform="translate(0 0)">
+    <path fill="#17191D" d="M23 0 H61 L74 13 V44 L61 59 H23 V35 L29 41 H46 L52 35 V28 L46 22 H29 L23 28 Z"/>
+    <path fill="#4A4F58" d="M0 18H23V40H0Z"/>
+    <path fill="#8A8F98" d="M0 40H23V60H0Z"/>
+    <path fill="#17191D" d="M0 63H23V88H0Z"/>
+  </g>
+</svg>

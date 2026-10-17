@@ -175,7 +175,7 @@ const pagination = computed(() => ({
 }))
 
 const levelText = (level?: number) => spaceLevels.value.find((l) => l.value === level)?.text ?? '未知'
-const levelColor = (level?: number) => (level === 0 ? 'blue' : level === 1 ? 'orange' : level === 2 ? 'purple' : 'default')
+const levelColor = (level?: number) => (level === 2 ? 'gold' : 'default')
 
 const fetchData = async () => {
   loading.value = true

@@ -8,7 +8,7 @@
       <div style="text-align: center; margin-bottom: 24px">
         <FolderOutlined style="font-size: 40px; color: var(--color-primary)" />
         <h3 style="margin: 12px 0 4px">你还没有私有空间</h3>
-        <p style="color: rgba(0, 0, 0, 0.45)">创建后即可在空间内上传和管理自己的图片</p>
+        <p style="color: var(--color-text-tertiary)">创建后即可在空间内上传和管理自己的图片</p>
       </div>
       <a-form :model="createForm" :label-col="{ span: 6 }" :wrapper-col="{ span: 12 }" @finish="doCreate">
         <a-form-item label="空间名称">

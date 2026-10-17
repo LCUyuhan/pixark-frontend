@@ -1,44 +1,52 @@
 <template>
   <div class="picture-detail-page">
-    <a-card :loading="loading">
-      <a-row :gutter="[24, 24]">
-        <!-- 图片展示 -->
-        <a-col :xs="24" :md="14" class="image-col">
-          <a-image :src="picture.url" :alt="picture.name" style="max-width: 100%" />
-        </a-col>
+    <a-spin :spinning="loading">
+      <div class="detail-layout">
+        <!-- 图片展示：浅灰底衬，竖图横图都居中完整显示 -->
+        <div class="image-panel">
+          <a-image :src="picture.url" :alt="picture.name" class="detail-image" />
+        </div>
+
         <!-- 图片信息 -->
-        <a-col :xs="24" :md="10">
-          <a-descriptions :title="picture.name" :column="1" bordered>
-            <a-descriptions-item label="简介">
-              {{ picture.introduction || '暂无简介' }}
-            </a-descriptions-item>
-            <a-descriptions-item label="分类">
-              <a-tag v-if="picture.category" color="blue">{{ picture.category }}</a-tag>
-              <template v-else>-</template>
-            </a-descriptions-item>
-            <a-descriptions-item label="标签">
-              <a-space :size="4" wrap>
-                <a-tag v-for="tag in picture.tags ?? []" :key="tag">{{ tag }}</a-tag>
-                <span v-if="!picture.tags?.length">-</span>
-              </a-space>
-            </a-descriptions-item>
-            <a-descriptions-item label="格式">{{ picture.picFormat ?? '-' }}</a-descriptions-item>
-            <a-descriptions-item label="尺寸">
-              {{ picture.picWidth ?? '-' }} x {{ picture.picHeight ?? '-' }}
-            </a-descriptions-item>
-            <a-descriptions-item label="大小">{{ formatSize(picture.picSize) }}</a-descriptions-item>
-            <a-descriptions-item label="上传者">
-              {{ picture.user?.userName ?? picture.user?.userAccount ?? '-' }}
-            </a-descriptions-item>
-            <a-descriptions-item label="创建时间">
+        <div class="info-panel">
+          <h1 class="pic-name">{{ picture.name || '未命名' }}</h1>
+          <p class="pic-intro">{{ picture.introduction || '暂无简介' }}</p>
+
+          <div class="uploader">
+            <a-avatar :size="28" :src="picture.user?.userAvatar">
+              {{ picture.user?.userName?.[0] ?? picture.user?.userAccount?.[0] }}
+            </a-avatar>
+            <span class="uploader-name">{{ picture.user?.userName ?? picture.user?.userAccount ?? '-' }}</span>
+            <span class="uploader-dot">·</span>
+            <span class="uploader-time">
               {{ picture.createTime ? dayjs(picture.createTime).format('YYYY-MM-DD HH:mm:ss') : '-' }}
-            </a-descriptions-item>
-          </a-descriptions>
+            </span>
+          </div>
+
+          <div v-if="picture.category || picture.tags?.length" class="tags">
+            <a-tag v-if="picture.category">{{ picture.category }}</a-tag>
+            <a-tag v-for="tag in picture.tags ?? []" :key="tag">{{ tag }}</a-tag>
+          </div>
+
+          <dl class="meta-grid">
+            <div class="meta-item">
+              <dt>格式</dt>
+              <dd>{{ picture.picFormat ?? '-' }}</dd>
+            </div>
+            <div class="meta-item">
+              <dt>尺寸</dt>
+              <dd>{{ picture.picWidth ?? '-' }} × {{ picture.picHeight ?? '-' }}</dd>
+            </div>
+            <div class="meta-item">
+              <dt>大小</dt>
+              <dd>{{ formatSize(picture.picSize) }}</dd>
+            </div>
+          </dl>
 
           <!-- 操作按钮 -->
-          <a-space style="margin-top: 16px" wrap>
+          <a-space class="actions" wrap>
             <!-- 下载：所有用户可用，直接从对象存储 URL 下载 -->
-            <a-button type="primary" @click="doDownload">
+            <a-button type="primary" size="large" @click="doDownload">
               <DownloadOutlined />
               免费下载
             </a-button>
@@ -71,9 +79,9 @@
               </a-popconfirm>
             </template>
           </a-space>
-        </a-col>
-      </a-row>
-    </a-card>
+        </div>
+      </div>
+    </a-spin>
 
     <!-- 以图搜图弹窗 -->
     <a-modal v-model:open="showImageSearchModal" title="以图搜图（全网相似图片）" width="760px" :footer="null">
@@ -279,12 +287,101 @@ onMounted(() => {
   margin: 0 auto;
 }
 
-/* a-row 默认会把两列拉到同高，图片贴在列顶会空出一片；这里只让图片所在列内部居中，
-   右列仍保持顶部对齐。竖图时左列被撑高，居中没有位移，等于无副作用 */
-.image-col {
+.detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 32px;
+  align-items: start;
+}
+
+/* 图片落在浅灰底衬上：不加白卡片外壳，图本身就是视觉中心 */
+.image-panel {
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 320px;
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-subtle);
+}
+
+.detail-image {
+  max-width: 100%;
+  max-height: 72vh;
+}
+
+.detail-image :deep(img) {
+  border-radius: var(--radius-md);
+}
+
+/* ---- 信息列 ---- */
+.pic-name {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+.pic-intro {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+  word-break: break-all;
+}
+
+.uploader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.uploader-name {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.uploader-dot,
+.uploader-time {
+  color: var(--color-text-tertiary);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+/* 三格元数据：标签小字 + 值，不用带边框的描述列表 */
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 20px 0 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--color-border-secondary);
+  border-bottom: 1px solid var(--color-border-secondary);
+}
+
+.meta-item dt {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.meta-item dd {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.actions {
+  margin-top: 20px;
 }
 
 .search-thumb {
@@ -301,5 +398,27 @@ onMounted(() => {
 
 .no-source {
   color: var(--color-text-disabled);
+}
+
+/* 移动端：单列，图片在上 */
+@media (max-width: 768px) {
+  .detail-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .image-panel {
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .detail-image {
+    max-height: 56vh;
+  }
+
+  .pic-name {
+    font-size: 20px;
+    line-height: 28px;
+  }
 }
 </style>

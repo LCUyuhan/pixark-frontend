@@ -1,8 +1,11 @@
 <template>
   <div class="user-login-page">
-    <h2 class="title">智能协同云图库 - 用户登录</h2>
-    <div class="desc">企业级智能协同云图库</div>
-    <a-form :model="formState" name="login" autocomplete="off" @finish="handleSubmit">
+    <div class="brand-block">
+      <PixArkLogo :size="26" class="brand-logo" />
+      <h2 class="title">登录 PixArk<span class="title-light">.cloud</span></h2>
+      <div class="desc">你的视觉宇宙，海量高清图片</div>
+    </div>
+    <a-form :model="formState" name="login" autocomplete="off" size="large" @finish="handleSubmit">
       <a-form-item name="userAccount" :rules="[{ required: true, message: '请输入账号' }]">
         <a-input v-model:value="formState.userAccount" placeholder="请输入账号" />
       </a-form-item>
@@ -32,6 +35,7 @@
 import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
+import PixArkLogo from '@/components/PixArkLogo.vue'
 import { userLogin } from '@/api/userController'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 
@@ -71,27 +75,50 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 
 <style scoped>
 .user-login-page {
-  max-width: 360px;
-  margin: 32px auto;
-  padding: 24px;
+  max-width: 400px;
+  margin: 48px auto;
+  padding: 36px 32px;
   background: var(--color-bg-container);
-  border-radius: 8px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-lg);
+}
+
+.brand-block {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.brand-logo {
+  color: var(--color-text);
 }
 
 .title {
-  text-align: center;
-  margin-bottom: 8px;
+  margin: 14px 0 6px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.title-light {
+  font-weight: 400;
+  color: var(--color-text-tertiary);
 }
 
 .desc {
-  text-align: center;
   color: var(--color-text-tertiary);
-  margin-bottom: 24px;
+  font-size: 13px;
 }
 
 .tips {
   text-align: right;
   color: var(--color-text-tertiary);
   margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .user-login-page {
+    margin: 24px auto;
+    padding: 28px 20px;
+  }
 }
 </style>

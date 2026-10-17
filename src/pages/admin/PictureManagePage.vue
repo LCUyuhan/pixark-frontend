@@ -176,7 +176,7 @@
           </template>
           <template v-else-if="column.dataIndex === 'spaceId'">
             <a-tooltip v-if="record.spaceId" :title="`空间 ID：${record.spaceId}`">
-              <a-tag color="purple">私有空间</a-tag>
+              <a-tag>私有空间</a-tag>
             </a-tooltip>
             <span v-else>公共图库</span>
           </template>

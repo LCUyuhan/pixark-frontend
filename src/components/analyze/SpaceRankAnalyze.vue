@@ -65,7 +65,7 @@ const options = computed(() => ({
       type: 'bar',
       barMaxWidth: 36,
       data: dataList.value.map((item) => Number((((item.totalSize ?? 0) / 1024 / 1024)).toFixed(2))),
-      itemStyle: { color: '#1677ff', borderRadius: [3, 3, 0, 0] },
+      itemStyle: { color: chartTheme.value.seriesColor, borderRadius: [3, 3, 0, 0] },
     },
   ],
 }))

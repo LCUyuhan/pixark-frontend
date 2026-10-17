@@ -1,44 +1,52 @@
 /**
- * 设计令牌（颜色）。暗色值见 dark.css。
+ * 设计令牌（颜色 / 圆角 / 布局）。暗色值见 dark.css。
  *
- * 数值不是手挑的，全部取自安装包内 ant-design-vue 4.2.6 默认算法的实际输出，
- * 保证手写样式和 AntDV 组件在两种主题下不会各画各的：
- *   中性色  node_modules/ant-design-vue/es/theme/themes/{default,dark}/colors.js
- *   色相梯度  require('@ant-design/colors').generate('#1677ff')
+ * 品牌规范（design-references/pixark-brand.png）的黑白灰极简体系：
+ * 主色近黑 #17191D，页面底浅灰，卡片纯白，无蓝紫彩色。
  *
  * --color-primary 必须与 src/constants/theme.ts 的 THEME_SEED.colorPrimary 一致，
  * 后者是传给 a-config-provider 的唯一种子；改主色时两处一起改。
  *
- * 只收录了被 <style> 块真实用到的值。hover/active 梯度、间距、圆角、阴影梯度暂未建令牌，
- * 等有用到再加。
+ * 只收录被 <style> 块真实用到的值；hover/active 梯度、间距等按需再补。
  */
 :root {
-  /* 主色 */
-  --color-primary: #1677ff;
-  --color-primary-bg: #e6f4ff;
-  --color-primary-border: #91caff;
-  --color-primary-ring: rgba(22, 119, 255, 0.2);
+  /* 主色：近黑。选中底色/描边用透明度派生，避免再维护一套灰阶字面量 */
+  --color-primary: #17191D;
+  --color-primary-bg: rgba(23, 25, 29, 0.06);
+  --color-primary-border: rgba(23, 25, 29, 0.32);
+  --color-primary-ring: rgba(23, 25, 29, 0.12);
 
   /* 文字 */
-  --color-text: rgba(0, 0, 0, 0.88);
-  --color-text-secondary: rgba(0, 0, 0, 0.65);
-  --color-text-tertiary: rgba(0, 0, 0, 0.45);
-  --color-text-placeholder: rgba(0, 0, 0, 0.35);
-  --color-text-disabled: rgba(0, 0, 0, 0.25);
+  --color-text: #202124;
+  --color-text-secondary: #737780;
+  --color-text-tertiary: #9B9EA5;
+  --color-text-placeholder: #B4B6BC;
+  --color-text-disabled: #C6C8CD;
 
   /* 背景 */
-  --color-bg-container: #ffffff;
-  --color-bg-layout: #f5f5f5;
-  --color-bg-subtle: #fafafa;
-  --color-bg-footer: #f0f2f5;
+  --color-bg-container: #FFFFFF;
+  --color-bg-layout: #F7F7F8;
+  --color-bg-subtle: #FAFAFB;
+  --color-bg-footer: #FFFFFF;
+
+  /* 深色导航（品牌顶栏，两种主题下都保持深色底 + 浅色字） */
+  --color-bg-nav: #111318;
+  --color-text-on-dark: rgba(255, 255, 255, 0.92);
+  --color-text-on-dark-secondary: rgba(255, 255, 255, 0.6);
 
   /* 描边 */
-  --color-border: rgba(0, 0, 0, 0.1);
-  --color-border-secondary: #f0f0f0;
+  --color-border: #E7E8EB;
+  --color-border-secondary: #F0F1F3;
 
   /* 阴影用的颜色（阴影本身仍是各处的 box-shadow 字面量，只有这层颜色随主题翻） */
-  --color-shadow-header: rgba(0, 0, 0, 0.06);
+  --color-shadow-header: rgba(17, 19, 24, 0.06);
+
+  /* 圆角 */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
 
   /* 布局 */
   --page-max-width: 1280px;
+  --nav-height: 64px;
 }

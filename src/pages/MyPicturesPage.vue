@@ -41,7 +41,7 @@
             <a-image :src="record.thumbnailUrl || record.url" :height="48" />
           </template>
           <template v-else-if="column.dataIndex === 'tags'">
-            <a-tag v-for="tag in record.tags" :key="tag" color="orange">{{ tag }}</a-tag>
+            <a-tag v-for="tag in record.tags" :key="tag">{{ tag }}</a-tag>
           </template>
           <template v-else-if="column.key === 'reviewStatus'">
             <a-tag :color="reviewColor(record.reviewStatus)">
@@ -151,7 +151,8 @@ const fetchData = async () => {
       throw new Error(res.data.message || '服务端返回异常')
     }
     pictureList.value = res.data.data.records ?? []
-    pagination.total = res.data.data.total ?? 0
+    // 后端 Long 会序列化成字符串，APagination 的 total 要求 Number，少这一步控制台会报类型警告
+    pagination.total = Number(res.data.data.total ?? 0)
   } catch (e: any) {
     // 失败要清掉旧数据，否则上一次筛选的结果会留着像请求成功一样
     pictureList.value = []

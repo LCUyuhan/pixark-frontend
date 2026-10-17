@@ -1,35 +1,36 @@
 /**
  * 暗色主题：覆写 tokens.css 里会随主题翻转的颜色。
- * 值取自 ant-design-vue 的 generateNeutralColorPalettes('#000', '#fff')
- * 与 generateColorPalettes('#1677ff') 的暗色梯度（1/5/6/7 档）。
  *
- * --color-bg-layout 用纯黑、--color-bg-container 用 #141414，是刻意跟 antd 暗色一致：
- * a-card / a-table 在暗色下就是 #141414，页面底色若比它亮，卡片就"浮"不出来了。
+ * 品牌黑白灰在暗色下的翻法：主色从近黑翻成浅灰（与 THEME_SEED_DARK.colorPrimary 一致），
+ * 背景/卡片保持纯中性灰（不带蓝调），与 antd 暗色算法的 #141414 卡片底对齐：
+ * --color-bg-layout 比 --color-bg-container 更暗，卡片才"浮"得出来。
+ *
+ * 深色导航 --color-bg-nav 不覆写：亮暗两种主题下顶栏都是 #111318。
  */
 .dark-theme {
-  /* 主色 */
-  --color-primary: #1668dc;
-  --color-primary-bg: #111a2c;
-  --color-primary-border: #15325b;
-  --color-primary-ring: rgba(22, 104, 220, 0.2);
+  /* 主色：浅灰，黑底白按钮的反转风格 */
+  --color-primary: #E8E9EB;
+  --color-primary-bg: rgba(255, 255, 255, 0.1);
+  --color-primary-border: rgba(255, 255, 255, 0.35);
+  --color-primary-ring: rgba(255, 255, 255, 0.15);
 
   /* 文字 */
-  --color-text: rgba(255, 255, 255, 0.85);
-  --color-text-secondary: rgba(255, 255, 255, 0.65);
+  --color-text: rgba(255, 255, 255, 0.88);
+  --color-text-secondary: rgba(255, 255, 255, 0.62);
   --color-text-tertiary: rgba(255, 255, 255, 0.45);
   --color-text-placeholder: rgba(255, 255, 255, 0.35);
   --color-text-disabled: rgba(255, 255, 255, 0.25);
 
-  /* 背景 */
+  /* 背景（中性灰，不带蓝） */
   --color-bg-container: #141414;
   --color-bg-layout: #000000;
-  --color-bg-subtle: #1a1a1a;
-  --color-bg-footer: #141414;
+  --color-bg-subtle: #1A1A1A;
+  --color-bg-footer: #101010;
 
   /* 描边 */
-  --color-border: #424242;
-  --color-border-secondary: #303030;
+  --color-border: #2E3036;
+  --color-border-secondary: #24262B;
 
   /* 阴影 */
-  --color-shadow-header: rgba(0, 0, 0, 0.45);
+  --color-shadow-header: rgba(0, 0, 0, 0.5);
 }

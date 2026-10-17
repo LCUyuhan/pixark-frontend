@@ -4,7 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
-    <title>智能协同云图库</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:title" content="PixArk.cloud" />
+    <meta property="og:description" content="你的视觉宇宙，海量高清图片" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/brand/og-card.png" />
+    <title>PixArk.cloud</title>
     <script>
       // 在首帧之前打上 .dark-theme，否则暗色用户每次刷新都会先白一下。
       // key 与 src/constants/theme.ts 的 THEME_STORAGE_KEY 保持一致。
@@ -20,6 +25,36 @@
   </head>
   <body>
     <div id="app"></div>
+    <!-- 启动失败诊断：脚本/模块加载出错时把错误显示在页面上，
+         避免"全黑/全白但没有任何提示"。仅在 #app 为空（应用没挂载）时出现 -->
+    <div
+      id="boot-error"
+      style="display:none;position:fixed;inset:0;padding:48px 24px;background:#fff;color:#17191d;font:14px/1.8 -apple-system,'PingFang SC','Microsoft YaHei',sans-serif;z-index:99999"
+    ></div>
+    <script>
+      ;(function () {
+        var show = function (text) {
+          // 应用已挂载就不再打扰（运行期的小错误走 console）
+          var app = document.getElementById('app')
+          if (app && app.children.length > 0) return
+          var el = document.getElementById('boot-error')
+          el.style.display = 'block'
+          el.innerHTML =
+            '<h2 style="margin:0 0 12px;font-size:18px">页面加载失败</h2>' +
+            '<p style="margin:0 0 8px">脚本执行出错，错误信息：</p>' +
+            '<pre style="padding:12px;background:#f5f5f5;border-radius:8px;white-space:pre-wrap;word-break:break-all">' +
+            text +
+            '</pre>' +
+            '<p style="margin:12px 0 0;color:#737780">请尝试 Ctrl+Shift+R 强制刷新；若多次失败，请检查浏览器版本或过旧/异常的配置。</p>'
+        }
+        window.addEventListener('error', function (e) {
+          show((e.message || '资源加载失败') + (e.filename ? '\n' + e.filename + ':' + e.lineno : ''))
+        })
+        window.addEventListener('unhandledrejection', function (e) {
+          show(String((e.reason && (e.reason.stack || e.reason.message)) || e.reason))
+        })
+      })()
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

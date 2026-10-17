@@ -100,7 +100,7 @@ const options = computed(() => ({
       symbolSize: 6,
       areaStyle: { opacity: 0.08 },
       lineStyle: { width: 2 },
-      itemStyle: { color: '#1677ff' },
+      itemStyle: { color: chartTheme.value.seriesColor },
       data: dataList.value.map((item) => item.count ?? 0),
       emphasis: { focus: 'series' },
     },
