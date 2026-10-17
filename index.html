@@ -14,7 +14,7 @@
       // 在首帧之前打上 .dark-theme，否则暗色用户每次刷新都会先白一下。
       // key 与 src/constants/theme.ts 的 THEME_STORAGE_KEY 保持一致。
       try {
-        var saved = localStorage.getItem('yu-picture-theme')
+        var saved = localStorage.getItem('pixark-theme')
         var dark = saved ? saved === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
         if (dark) document.documentElement.classList.add('dark-theme')
         document.documentElement.style.colorScheme = dark ? 'dark' : 'light'

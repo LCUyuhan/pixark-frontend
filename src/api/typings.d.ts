@@ -1,6 +1,6 @@
 /**
  * 全局类型定义
- * 与后端 yu-picture-backend 的响应包装类、DTO、VO 完全对应
+ * 与后端 pixark-backend 的响应包装类、DTO、VO 完全对应
  */
 
 declare namespace API {

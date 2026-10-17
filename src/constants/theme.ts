@@ -26,4 +26,4 @@ export const THEME_SEED_DARK = {
 } as const
 
 /** 主题偏好的 localStorage key */
-export const THEME_STORAGE_KEY = 'yu-picture-theme'
+export const THEME_STORAGE_KEY = 'pixark-theme'
