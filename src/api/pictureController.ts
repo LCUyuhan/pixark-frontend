@@ -80,9 +80,14 @@ export async function listPictureTagCategory() {
   return request.get<API.BaseResponse<API.PictureTagCategory>>('/picture/tag_category')
 }
 
-/** 以图搜图（站外相似图片，可能耗时数十秒）POST /picture/search/picture */
-export async function searchPictureByPicture(body: API.SearchPictureByPictureRequest) {
-  return request.post<API.BaseResponse<API.ImageSearchResult[]>>('/picture/search/picture', body)
+/** 创建以图搜图任务（异步入队，需轮询 get_task 取结果）POST /picture/search/create_task */
+export async function createImageSearchTask(body: API.SearchPictureByPictureRequest) {
+  return request.post<API.BaseResponse<API.ImageSearchTaskVO>>('/picture/search/create_task', body)
+}
+
+/** 查询以图搜图任务（仅提交人可查）GET /picture/search/get_task */
+export async function getImageSearchTask(params: { taskId: string }) {
+  return request.get<API.BaseResponse<API.ImageSearchTaskVO>>('/picture/search/get_task', { params })
 }
 
 /** 颜色搜索（空间内按主色调相似度前 12）POST /picture/search/color */

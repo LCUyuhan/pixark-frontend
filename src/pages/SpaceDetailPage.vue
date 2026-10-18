@@ -17,7 +17,12 @@
             <BarChartOutlined />
             空间分析
           </a-button>
-          <a-popconfirm title="确定要删除该空间吗？空间内图片将一并删除" @confirm="doDelete">
+          <a-popconfirm
+            :title="`确定删除「${space.spaceName}」吗？空间内 ${space.totalCount ?? 0} 张图片会一并删除，且不可恢复`"
+            ok-text="删除"
+            :ok-button-props="{ danger: true }"
+            @confirm="doDelete"
+          >
             <a-button danger>删除空间</a-button>
           </a-popconfirm>
         </a-space>

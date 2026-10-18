@@ -65,7 +65,12 @@
               </a-button>
               <a-button type="link" size="small" @click="doEdit(record)">改名</a-button>
               <a-button type="link" size="small" @click="doUpdate(record)">改级别</a-button>
-              <a-popconfirm title="确定要删除该空间吗？空间内图片将一并删除" @confirm="doDelete(record.id)">
+              <a-popconfirm
+                :title="`确定删除「${record.spaceName}」吗？空间内 ${record.totalCount ?? 0} 张图片会一并删除，且不可恢复`"
+                ok-text="删除"
+                :ok-button-props="{ danger: true }"
+                @confirm="doDelete(record.id)"
+              >
                 <a-button type="link" size="small" danger>删除</a-button>
               </a-popconfirm>
             </a-space>
@@ -87,7 +92,7 @@
     <a-modal v-model:open="showUpdateModal" title="修改空间级别与限额" @ok="handleUpdate">
       <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 17 }">
         <a-form-item label="空间级别">
-          <a-select v-model:value="updateForm.spaceLevel" placeholder="选择空间级别">
+          <a-select v-model:value="updateForm.spaceLevel" placeholder="选择空间级别" @change="onLevelChange">
             <a-select-option v-for="level in spaceLevels" :key="level.value" :value="level.value">
               {{ level.text }}（{{ level.maxCount }} 张 / {{ formatSize(level.maxSize) }}）
             </a-select-option>
@@ -105,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
@@ -264,17 +269,14 @@ const doUpdate = (record: API.SpaceVO) => {
   showUpdateModal.value = true
 }
 
-// 切换级别时自动填充该级别的默认限额（仍可手动覆盖）
-watch(
-  () => updateForm.spaceLevel,
-  (level) => {
-    const found = spaceLevels.value.find((l) => l.value === level)
-    if (found) {
-      maxSizeMb.value = Math.round(found.maxSize / 1024 / 1024)
-      updateForm.maxCount = found.maxCount
-    }
-  },
-)
+// 只响应用户手动切换级别；doUpdate 里给 spaceLevel 赋值不会触发 change，避免覆盖已有自定义限额
+const onLevelChange = (level: number) => {
+  const found = spaceLevels.value.find((l) => l.value === level)
+  if (found) {
+    maxSizeMb.value = Math.round(found.maxSize / 1024 / 1024)
+    updateForm.maxCount = found.maxCount
+  }
+}
 
 const handleUpdate = async () => {
   try {

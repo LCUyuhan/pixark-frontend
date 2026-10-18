@@ -86,14 +86,24 @@
     <!-- 以图搜图弹窗 -->
     <a-modal v-model:open="showImageSearchModal" title="以图搜图（全网相似图片）" width="760px" :footer="null">
       <a-space style="margin-bottom: 12px" wrap>
-        <a-button type="primary" :loading="imageSearchLoading" @click="doImageSearch">开始搜索</a-button>
-        <span class="search-tip">走百度识图，单次可能需要数十秒</span>
+        <a-button type="primary" :loading="imageSearchPhase === 'polling'" @click="doImageSearch">开始搜索</a-button>
+        <a-button v-if="imageSearchTaskId && imageSearchPhase === 'failed'" @click="startImageSearchPolling">
+          继续查询
+        </a-button>
+        <span class="search-tip">走百度识图，任务在服务端排队串行执行，可能需要数十秒</span>
       </a-space>
       <a-alert
-        v-if="imageSearchLoading"
+        v-if="imageSearchPhase === 'polling'"
         type="info"
         show-icon
-        message="全网搜索中，可能需要数十秒，请耐心等待"
+        :message="`${imageSearchStatusText}，已等待 ${waitedSeconds} 秒`"
+        style="margin-bottom: 12px"
+      />
+      <a-alert
+        v-else-if="imageSearchPhase === 'failed'"
+        type="error"
+        show-icon
+        :message="imageSearchError"
         style="margin-bottom: 12px"
       />
       <a-list :grid="{ gutter: 12, column: 4 }" :data-source="imageSearchResults">
@@ -120,7 +130,7 @@
           </a-list-item>
         </template>
       </a-list>
-      <a-empty v-if="searched && !imageSearchLoading && !imageSearchResults.length" description="未找到相似图片" />
+      <a-empty v-if="imageSearchPhase === 'done' && !imageSearchResults.length" description="未找到相似图片" />
     </a-modal>
 
     <!-- 分享弹窗 -->
@@ -137,7 +147,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
@@ -149,7 +159,8 @@ import {
   ShareAltOutlined,
 } from '@ant-design/icons-vue'
 import dayjs from 'dayjs'
-import { deletePicture, getPictureVOById, searchPictureByPicture } from '@/api/pictureController'
+import { createImageSearchTask, deletePicture, getImageSearchTask, getPictureVOById } from '@/api/pictureController'
+import { IMAGE_SEARCH_POLL_INTERVAL_MS, IMAGE_SEARCH_POLL_MAX_TIMES, IMAGE_SEARCH_TASK_STATUS } from '@/constants/imageSearch'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import { downloadImage, formatSize } from '@/utils'
 import AiImageEditModal from '@/components/AiImageEditModal.vue'
@@ -226,35 +237,105 @@ const doDelete = async () => {
   }
 }
 
-// ===== 以图搜图 =====
+// ===== 以图搜图：提交任务 + 轮询（消费者串行爬取，排队是常态）=====
 const showImageSearchModal = ref(false)
-const imageSearchLoading = ref(false)
+/** idle 未开始 / polling 等结果 / done 已出结果 / failed 失败或等待超时 */
+const imageSearchPhase = ref<'idle' | 'polling' | 'done' | 'failed'>('idle')
+const imageSearchTaskId = ref('')
+const imageSearchStatusText = ref('')
+const imageSearchError = ref('')
 const imageSearchResults = ref<API.ImageSearchResult[]>([])
-const searched = ref(false)
+let imageSearchPollTimes = 0
+let imageSearchTimer: number | undefined
+
+const waitedSeconds = computed(() => Math.round((imageSearchPollTimes * IMAGE_SEARCH_POLL_INTERVAL_MS) / 1000))
+
+const stopImageSearchPolling = () => {
+  if (imageSearchTimer !== undefined) {
+    window.clearTimeout(imageSearchTimer)
+    imageSearchTimer = undefined
+  }
+}
 
 const openImageSearch = () => {
+  stopImageSearchPolling()
   imageSearchResults.value = []
-  searched.value = false
+  imageSearchPhase.value = 'idle'
+  imageSearchTaskId.value = ''
+  imageSearchError.value = ''
+  imageSearchStatusText.value = ''
   showImageSearchModal.value = true
 }
 
-const doImageSearch = async () => {
-  imageSearchLoading.value = true
-  searched.value = false
+/** @returns 任务是否已结束（成功或失败），结束就停止轮询 */
+const applyImageSearchTask = (task?: API.ImageSearchTaskVO) => {
+  if (!task) return false
+  if (task.taskStatus === IMAGE_SEARCH_TASK_STATUS.SUCCEEDED) {
+    stopImageSearchPolling()
+    imageSearchResults.value = task.results ?? []
+    imageSearchPhase.value = 'done'
+    return true
+  }
+  if (task.taskStatus === IMAGE_SEARCH_TASK_STATUS.FAILED) {
+    stopImageSearchPolling()
+    imageSearchError.value = task.failReason ?? '搜索失败，请稍后重试'
+    imageSearchPhase.value = 'failed'
+    return true
+  }
+  imageSearchStatusText.value = task.statusText ?? '排队中'
+  return false
+}
+
+const runImageSearchPoll = async () => {
+  imageSearchTimer = undefined
+  if (imageSearchPhase.value !== 'polling' || !imageSearchTaskId.value) return
+  imageSearchPollTimes += 1
   try {
-    const res = await searchPictureByPicture({ pictureId: picture.value.id })
-    if (res.data.code === 0) {
-      imageSearchResults.value = res.data.data ?? []
-    } else {
-      message.error('以图搜图失败：' + res.data.message)
-    }
+    const res = await getImageSearchTask({ taskId: imageSearchTaskId.value })
+    if (res.data.code !== 0) throw new Error(res.data.message)
+    if (applyImageSearchTask(res.data.data)) return
+  } catch (e: any) {
+    stopImageSearchPolling()
+    imageSearchError.value = '查询进度失败：' + (e?.message ?? '网络异常')
+    imageSearchPhase.value = 'failed'
+    return
+  }
+  if (imageSearchPollTimes >= IMAGE_SEARCH_POLL_MAX_TIMES) {
+    stopImageSearchPolling()
+    imageSearchError.value = `已等待 ${waitedSeconds.value} 秒仍未出结果，任务可能还在排队，点「继续查询」可接着看`
+    imageSearchPhase.value = 'failed'
+    return
+  }
+  imageSearchTimer = window.setTimeout(runImageSearchPoll, IMAGE_SEARCH_POLL_INTERVAL_MS)
+}
+
+const startImageSearchPolling = () => {
+  imageSearchPollTimes = 0
+  imageSearchError.value = ''
+  imageSearchStatusText.value = '排队中'
+  imageSearchPhase.value = 'polling'
+  imageSearchTimer = window.setTimeout(runImageSearchPoll, IMAGE_SEARCH_POLL_INTERVAL_MS)
+}
+
+const doImageSearch = async () => {
+  try {
+    const res = await createImageSearchTask({ pictureId: picture.value.id })
+    if (res.data.code !== 0 || !res.data.data) throw new Error(res.data.message || '任务创建失败')
+    imageSearchTaskId.value = res.data.data.taskId
+    // 命中结果缓存时后端直接返回已完成任务，不用轮询
+    if (applyImageSearchTask(res.data.data)) return
+    startImageSearchPolling()
   } catch (e: any) {
     message.error('以图搜图失败：' + (e?.message ?? '网络错误'))
-  } finally {
-    imageSearchLoading.value = false
-    searched.value = true
   }
 }
+
+// 关掉弹窗只是停止轮询，任务还在队列里跑；重新打开点「继续查询」能接着看
+watch(showImageSearchModal, opened => {
+  if (!opened) stopImageSearchPolling()
+})
+
+onBeforeUnmount(stopImageSearchPolling)
 
 // ===== 分享 =====
 const shareOpen = ref(false)

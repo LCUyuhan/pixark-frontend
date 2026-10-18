@@ -86,8 +86,9 @@
         @load-more="onLoadMore"
       >
         <template #end>
+          <!-- 30 对应后端 guest-picture.view-limit，改阈值时同步这行 -->
           <p v-if="showLoginGate" class="login-gate">
-            <a @click="goRegister">注册</a> 或 <a @click="goLogin">登录</a>可查看更优质内容哦~
+            游客每次浏览最多展示 30 张，<a @click="goRegister">注册</a> 或 <a @click="goLogin">登录</a>后可浏览完整图库
           </p>
           <span v-else class="list-end-hint">没有更多了</span>
         </template>

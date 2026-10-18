@@ -13,6 +13,13 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // 后端 context-path 已经是 /api，所以不用 rewrite，直接转
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8123',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     rollupOptions: {

@@ -1,8 +1,9 @@
 import axios from 'axios'
 import { message } from 'ant-design-vue'
 
-// 后端服务地址（端口 8123，上下文路径 /api）
-const BASE_URL = 'http://localhost:8123/api'
+// 相对路径：生产由 Nginx 同源反代到后端，本地开发由 vite proxy 转发。
+// 这样换 IP、换域名、上 HTTPS 都不需要重新构建前端
+const BASE_URL = '/api'
 
 // 创建 Axios 实例
 const request = axios.create({

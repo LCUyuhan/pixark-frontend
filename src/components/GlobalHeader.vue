@@ -33,6 +33,7 @@
             </a-menu>
           </template>
         </a-dropdown>
+        <a class="nav-link" @click="openFeedback">反馈</a>
       </nav>
 
       <div class="right">
@@ -88,8 +89,17 @@
           <component :is="item.icon" v-if="item.icon" />
           {{ item.label }}
         </a>
+        <a class="drawer-link" @click="openFeedback">
+          <MessageOutlined />
+          意见反馈
+        </a>
       </div>
     </a-drawer>
+
+    <a-modal v-model:open="feedbackOpen" title="意见反馈" :footer="null" width="420px" destroy-on-close>
+      <p class="feedback-tip">使用中遇到问题、或有功能建议，欢迎邮件联系我。</p>
+      <div class="feedback-email">{{ feedbackEmail }}</div>
+    </a-modal>
   </div>
 </template>
 
@@ -97,7 +107,7 @@
 import { computed, h, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined, AuditOutlined, BulbOutlined, BulbFilled, MenuOutlined, DownOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, UserOutlined, LogoutOutlined, PlusOutlined, PictureOutlined, CloudUploadOutlined, FolderOutlined, DatabaseOutlined, AuditOutlined, BulbOutlined, BulbFilled, MenuOutlined, DownOutlined, MessageOutlined } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { userLogout } from '@/api/userController'
@@ -145,6 +155,17 @@ const menuKeyOf = (path: string) => (path.startsWith('/space/') ? '/my_spaces' :
 const selectedKeys = computed(() => [menuKeyOf(route.path)])
 
 const drawerOpen = ref(false)
+
+/* ---- 意见反馈 ---- */
+const feedbackOpen = ref(false)
+const feedbackEmail = ref('')
+
+// 邮箱在点击时才拼接，页面初始 HTML 里没有完整地址，静态爬虫抓不到
+const openFeedback = () => {
+  drawerOpen.value = false
+  feedbackEmail.value = ['pixarkcloud', '163.com'].join('@')
+  feedbackOpen.value = true
+}
 
 const doMenuClick = (key: string) => {
   drawerOpen.value = false
@@ -325,6 +346,27 @@ const doLogout = async () => {
 .drawer-link.active {
   font-weight: 600;
   background: var(--color-primary-bg);
+}
+
+/* ---- 反馈弹窗 ---- */
+.feedback-tip {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.feedback-email {
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-layout);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  color: var(--color-text);
+  text-align: center;
+  word-break: break-all;
+  /* 点一下整段选中，省得手动拖 */
+  user-select: all;
 }
 
 .mobile-only {

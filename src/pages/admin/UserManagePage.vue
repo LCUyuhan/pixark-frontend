@@ -53,7 +53,12 @@
           <template v-else-if="column.key === 'action'">
             <a-space>
               <a-button type="link" size="small" @click="openEditModal(record)">编辑</a-button>
-              <a-popconfirm title="确定要删除该用户吗？" @confirm="doDelete(record.id)">
+              <a-popconfirm
+                :title="`确定删除用户「${record.userName ?? record.userAccount}」吗？他的空间与全部图片会一并删除，且不可恢复`"
+                ok-text="删除"
+                :ok-button-props="{ danger: true }"
+                @confirm="doDelete(record.id)"
+              >
                 <a-button type="link" size="small" danger>删除</a-button>
               </a-popconfirm>
             </a-space>

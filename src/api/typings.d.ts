@@ -396,6 +396,18 @@ declare namespace API {
     title?: string
   }
 
+  /** 以图搜图任务（创建与轮询共用），对应后端 ImageSearchTaskVO */
+  type ImageSearchTaskVO = {
+    taskId: string
+    /** PENDING 排队中 / RUNNING 搜索中 / SUCCEEDED / FAILED */
+    taskStatus: string
+    statusText?: string
+    /** 任务成功时非空 */
+    results?: ImageSearchResult[]
+    /** 任务失败时非空，面向用户的文案 */
+    failReason?: string
+  }
+
   /** 以图搜图请求 */
   type SearchPictureByPictureRequest = {
     /** 站内图片 id */
