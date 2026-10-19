@@ -1,6 +1,6 @@
 # PixArk Frontend
 
-![PixArk](public/brand/og-card.png)
+![桌面端首页](./docs/screenshots/pixark-desktop.png)
 
 PixArk 云图库的前端，基于 Vue 3 + Vite 6 + TypeScript + Ant Design Vue 4。
 
@@ -100,9 +100,7 @@ npm run preview
 
 ## 截图
 
-![桌面端首页](docs/screenshots/pixark-desktop.jpg)
-
-![移动端首页](docs/screenshots/pixark-mobile.jpg)
+![桌面端首页](docs/screenshots/pixark-desktop.png)
 
 ## 部署
 
