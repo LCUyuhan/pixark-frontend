@@ -2,7 +2,7 @@
 
 ![PixArk](public/brand/og-card.png)
 
-PixArk 智能协同云图库的前端，基于 Vue 3 + Vite 6 + TypeScript + Ant Design Vue 4。
+PixArk 云图库的前端，基于 Vue 3 + Vite 6 + TypeScript + Ant Design Vue 4。
 
 ## 功能
 
