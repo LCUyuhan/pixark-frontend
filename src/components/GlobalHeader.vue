@@ -283,13 +283,20 @@ const doLogout = async () => {
 .right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   flex: none;
   margin-left: auto;
 }
 
 .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   color: var(--color-text-on-dark-secondary);
+  line-height: 1;
 }
 
 .icon-btn:hover {
@@ -298,10 +305,14 @@ const doLogout = async () => {
 }
 
 .user-info {
-  cursor: pointer;
-  color: var(--color-text-on-dark);
-  padding: 4px 6px;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 6px;
   border-radius: var(--radius-sm);
+  color: var(--color-text-on-dark);
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
 .user-info:hover {

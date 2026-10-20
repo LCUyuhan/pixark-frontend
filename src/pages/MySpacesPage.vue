@@ -10,7 +10,7 @@
         <h3 style="margin: 12px 0 4px">你还没有私有空间</h3>
         <p style="color: var(--color-text-tertiary)">创建后即可在空间内上传和管理自己的图片</p>
       </div>
-      <a-form :model="createForm" :label-col="{ span: 6 }" :wrapper-col="{ span: 12 }" @finish="doCreate">
+      <a-form :model="createForm" layout="vertical" @finish="doCreate">
         <a-form-item label="空间名称">
           <a-input v-model:value="createForm.spaceName" placeholder="请输入空间名称" />
         </a-form-item>
@@ -24,7 +24,7 @@
             普通用户只能创建普通版空间，更高规格（专业版 / 旗舰版）需管理员开通
           </div>
         </a-form-item>
-        <a-form-item :wrapper-col="{ offset: 6, span: 12 }">
+        <a-form-item>
           <a-button type="primary" html-type="submit" block :loading="creating">创建空间</a-button>
         </a-form-item>
       </a-form>
@@ -122,6 +122,16 @@ onMounted(() => {
 .my-spaces-page {
   max-width: 560px;
   margin: 40px auto;
+}
+
+@media (max-width: 768px) {
+  .my-spaces-page {
+    margin: 16px auto 0;
+  }
+
+  .my-spaces-page :deep(.ant-card-body) {
+    padding: 20px 16px;
+  }
 }
 
 .level-tip {

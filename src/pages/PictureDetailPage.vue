@@ -60,8 +60,8 @@
               <RobotOutlined />
               AI 编辑
             </a-button>
-            <!-- 分享：空间图受 checkPictureAuth 保护，别人打不开，只对公共图库开放 -->
-            <a-button v-if="!picture.spaceId" @click="openShare">
+            <!-- 分享：空间图受 checkPictureAuth 保护；公共图也只允许审核通过后分享 -->
+            <a-button v-if="!picture.spaceId && picture.reviewStatus === 1" @click="openShare">
               <ShareAltOutlined />
               分享
             </a-button>
@@ -342,7 +342,9 @@ const shareOpen = ref(false)
 const shareUrl = ref('')
 
 const openShare = () => {
-  shareUrl.value = `${window.location.origin}/picture/${picture.value.id}`
+  // 以路由参数为准，避免详情数据还没加载完时生成空 id
+  const id = route.params.id as string
+  shareUrl.value = `${window.location.origin}/picture/${id}`
   shareOpen.value = true
 }
 

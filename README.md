@@ -7,6 +7,7 @@ PixArk 云图库的前端，基于 Vue 3 + Vite 6 + TypeScript + Ant Design Vue 
 ## 功能
 
 - 公共图库浏览、搜索、分类筛选和详情查看
+- 图片分享：二维码、复制链接、保存分享图
 - 图片上传：本地文件上传、URL 抓取、拖拽上传
 - 私有空间：创建空间、空间配额、空间图片管理
 - 图片审核：待审核、通过、拒绝
@@ -27,6 +28,7 @@ PixArk 云图库的前端，基于 Vue 3 + Vite 6 + TypeScript + Ant Design Vue 
 | 图表 | ECharts 5、vue-echarts、echarts-wordcloud |
 | 请求 | Axios |
 | 图片处理 | cropperjs、file-saver |
+| 二维码 | qrcode |
 | 日期 | dayjs |
 
 ## 项目结构
