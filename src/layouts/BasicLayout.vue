@@ -15,6 +15,16 @@
         </div>
         <p class="footer-tagline">Your Visual Universe · 用像素，承载无限的想象。</p>
         <p class="footer-copy">© 2026 PixArk.cloud. All rights reserved.</p>
+        <p class="footer-filing">
+          <a
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="工业和信息化部备案管理系统"
+          >
+            鲁ICP备2026064796号-1
+          </a>
+        </p>
       </div>
     </a-layout-footer>
     <MobileTabBar />
@@ -112,6 +122,24 @@ const router = useRouter()
   color: var(--color-text-tertiary);
 }
 
+.footer-filing {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.footer-filing a {
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+}
+
+.footer-filing a:hover,
+.footer-filing a:focus-visible {
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* 移动端：收窄页边距，底部给 Tab Bar 让位（含安全区） */
 @media (max-width: 768px) {
   .content {
@@ -119,7 +147,8 @@ const router = useRouter()
   }
 
   .footer {
-    padding: 24px 16px;
+    /* 底部 Tab Bar 固定 56px + 安全区，页脚要给备案号留出可见空间 */
+    padding: 24px 16px calc(80px + env(safe-area-inset-bottom));
   }
 }
 </style>

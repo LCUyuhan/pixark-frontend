@@ -35,6 +35,16 @@ export async function uploadPictureByBatch(body: API.PictureUploadByBatchRequest
   return request.post<API.BaseResponse<number>>('/picture/upload/batch', body)
 }
 
+/** 创建 AI 生成图片信息任务（异步，前端轮询）POST /picture/ai/info */
+export async function createPictureAiInfo(body: API.PictureAiInfoRequest) {
+  return request.post<API.BaseResponse<API.AiPictureInfoTaskVO>>('/picture/ai/info', body)
+}
+
+/** 查询 AI 生成图片信息任务 GET /picture/ai/info */
+export async function getPictureAiInfo(params: { taskId: string }) {
+  return request.get<API.BaseResponse<API.AiPictureInfoTaskVO>>('/picture/ai/info', { params })
+}
+
 /** 删除图片（本人或管理员）POST /picture/delete */
 export async function deletePicture(body: API.DeleteRequest) {
   return request.post<API.BaseResponse<boolean>>('/picture/delete', body)

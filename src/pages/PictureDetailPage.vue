@@ -106,7 +106,7 @@
         :message="imageSearchError"
         style="margin-bottom: 12px"
       />
-      <a-list :grid="{ gutter: 12, column: 4 }" :data-source="imageSearchResults">
+      <a-list :grid="{ gutter: 12, xs: 2, sm: 2, md: 4, lg: 4 }" :data-source="imageSearchResults">
         <template #renderItem="{ item }">
           <a-list-item>
             <a-card hoverable :body-style="{ padding: '8px' }">
@@ -116,8 +116,9 @@
                   <img :src="item.imageUrl" :alt="item.title ?? '相似图片'" class="search-thumb" />
                 </a>
               </template>
-              <a-card-meta>
-                <template #description>{{ item.title ?? '-' }}</template>
+              <!-- 百度结果经常没有标题，空着不占位，移动端能省一行高度 -->
+              <a-card-meta v-if="item.title">
+                <template #description>{{ item.title }}</template>
               </a-card-meta>
               <template #actions>
                 <!-- 仅百度结果有来源页；阿里结果无 sourceUrl，不展示该入口 -->
@@ -468,8 +469,11 @@ onMounted(() => {
 }
 
 .search-thumb {
+  display: block;
   width: 100%;
-  height: 140px;
+  /* 缩略图按宽度自适应高度：手机两列时能撑满卡片，不再是一条细缝 */
+  aspect-ratio: 16 / 10;
+  height: auto;
   object-fit: contain;
   background: var(--color-bg-subtle);
 }

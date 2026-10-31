@@ -60,9 +60,24 @@
               />
             </a-form-item>
             <a-form-item>
-              <a-button type="primary" html-type="submit" :loading="submitLoading" :disabled="!picture?.id">
-                {{ pictureId ? '保存修改' : '创建图片' }}
-              </a-button>
+              <a-space>
+                <a-button
+                  type="primary"
+                  html-type="submit"
+                  :loading="submitLoading"
+                  :disabled="!picture?.id"
+                >
+                  {{ pictureId ? '保存修改' : '创建图片' }}
+                </a-button>
+                <a-button
+                  html-type="button"
+                  :loading="aiLoading"
+                  :disabled="!picture?.id || aiLoading"
+                  @click="handleAiGenerateClick"
+                >
+                  AI 生成信息
+                </a-button>
+              </a-space>
             </a-form-item>
           </a-form>
         </a-col>
@@ -72,13 +87,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import PictureUpload from '@/components/PictureUpload.vue'
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue'
 import {
+  createPictureAiInfo,
   editPicture,
+  getPictureAiInfo,
   getPictureVOById,
   listPictureTagCategory,
 } from '@/api/pictureController'
@@ -150,11 +167,113 @@ const loadPicture = async () => {
 
 /** 上传成功：回填图片信息 */
 const onUploadSuccess = (newPicture: API.PictureVO) => {
+  // 换了图就停掉上一张图的 AI 轮询，避免结果回填到新图
+  stopAiPolling()
+  aiLoading.value = false
   picture.value = newPicture
   pictureForm.id = newPicture.id
   if (!pictureForm.name) {
     pictureForm.name = newPicture.name
   }
+}
+
+// AI 生成图片信息：提交后轮询任务，成功则回填表单
+const aiLoading = ref(false)
+let aiPollTimer: number | undefined
+
+/** 停止轮询，切换图片或离开页面时调用 */
+const stopAiPolling = () => {
+  if (aiPollTimer !== undefined) {
+    window.clearTimeout(aiPollTimer)
+    aiPollTimer = undefined
+  }
+}
+
+/** 轮询任务结果；只回填发起任务时的那张图，避免上传换图后结果错位 */
+const pollAiInfo = (taskId: string, pictureId: number | string, elapsed: number) => {
+  aiPollTimer = window.setTimeout(async () => {
+    try {
+      const res = await getPictureAiInfo({ taskId })
+      const data = res.data.data
+      if (res.data.code !== 0 || !data) {
+        aiLoading.value = false
+        message.error('获取生成结果失败：' + res.data.message)
+        return
+      }
+      if (data.status === 'SUCCEEDED') {
+        if (String(picture.value?.id) === String(pictureId)) {
+          if (data.name) pictureForm.name = data.name
+          if (data.introduction) pictureForm.introduction = data.introduction
+          if (data.category) pictureForm.category = data.category
+          if (data.tags?.length) pictureForm.tags = data.tags
+        }
+        aiLoading.value = false
+        message.success('AI 已生成图片信息，可继续修改')
+        return
+      }
+      if (data.status === 'FAILED') {
+        aiLoading.value = false
+        message.error(data.failReason || 'AI 生成失败，请重试')
+        return
+      }
+      if (elapsed >= 60000) {
+        aiLoading.value = false
+        message.warning('AI 生成超时，请稍后重试')
+        return
+      }
+      pollAiInfo(taskId, pictureId, elapsed + 1000)
+    } catch (e: any) {
+      aiLoading.value = false
+      message.error('获取生成结果失败：' + (e?.message ?? '网络错误'))
+    }
+  }, 1000)
+}
+
+/** 提交 AI 生成任务 */
+const handleAiGenerate = async () => {
+  const id = picture.value?.id
+  if (!id) {
+    message.warning('请先上传图片')
+    return
+  }
+  aiLoading.value = true
+  try {
+    const res = await createPictureAiInfo({ pictureId: id })
+    if (res.data.code === 0 && res.data.data?.taskId) {
+      pollAiInfo(res.data.data.taskId, id, 0)
+    } else {
+      aiLoading.value = false
+      message.error('提交失败：' + res.data.message)
+    }
+  } catch (e: any) {
+    aiLoading.value = false
+    message.error('提交失败：' + (e?.message ?? '网络错误'))
+  }
+}
+
+/** 编辑页已经有手写内容时先确认，避免误点把原内容覆盖掉；创建页直接生成 */
+const handleAiGenerateClick = () => {
+  if (!pictureId.value) {
+    handleAiGenerate()
+    return
+  }
+  const hasContent = Boolean(
+    pictureForm.name ||
+      pictureForm.introduction ||
+      pictureForm.category ||
+      (pictureForm.tags && pictureForm.tags.length > 0),
+  )
+  if (!hasContent) {
+    handleAiGenerate()
+    return
+  }
+  Modal.confirm({
+    title: '覆盖当前内容？',
+    content: 'AI 生成结果会替换表单里已有的名称、简介、分类和标签，保存前仍可修改。',
+    okText: '覆盖',
+    cancelText: '取消',
+    onOk: () => handleAiGenerate(),
+  })
 }
 
 const onFileSelect = (file: File) => {
@@ -204,6 +323,8 @@ onMounted(() => {
   loadTagCategory()
   loadPicture()
 })
+
+onUnmounted(stopAiPolling)
 </script>
 
 <style scoped>

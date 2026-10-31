@@ -214,6 +214,30 @@ declare namespace API {
     namePrefix?: string
   }
 
+  /** AI 生成图片信息请求 */
+  type PictureAiInfoRequest = {
+    /** 图片 id */
+    pictureId: number | string
+  }
+
+  /** AI 生成图片信息任务 */
+  type AiPictureInfoTaskVO = {
+    /** 任务 id，用于轮询 */
+    taskId: string
+    /** 任务状态：PENDING / SUCCEEDED / FAILED */
+    status: string
+    /** 图片名称 */
+    name?: string
+    /** 简介 */
+    introduction?: string
+    /** 分类 */
+    category?: string
+    /** 标签 */
+    tags?: string[]
+    /** 失败原因 */
+    failReason?: string
+  }
+
   /** 图片编辑请求（给用户使用） */
   type PictureEditRequest = {
     /** id */
