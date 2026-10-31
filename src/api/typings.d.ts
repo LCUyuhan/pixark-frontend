@@ -206,6 +206,8 @@ declare namespace API {
 
   /** 批量抓取上传请求（仅管理员） */
   type PictureUploadByBatchRequest = {
+    /** 图源：pixabay / pexels / bing，留空默认 pixabay */
+    source?: string
     /** 搜索词 */
     searchText?: string
     /** 抓取数量 */

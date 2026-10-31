@@ -15,6 +15,12 @@
         </div>
         <p class="footer-tagline">Your Visual Universe · 用像素，承载无限的想象。</p>
         <p class="footer-copy">© 2026 PixArk.cloud. All rights reserved.</p>
+        <p class="footer-source">
+          部分图片素材来自
+          <a href="https://pixabay.com/" target="_blank" rel="noopener noreferrer">Pixabay</a>
+          和
+          <a href="https://www.pexels.com/" target="_blank" rel="noopener noreferrer">Pexels</a>
+        </p>
         <p class="footer-filing">
           <a
             href="https://beian.miit.gov.cn/"
@@ -122,17 +128,21 @@ const router = useRouter()
   color: var(--color-text-tertiary);
 }
 
+.footer-source,
 .footer-filing {
   margin: 6px 0 0;
   font-size: 12px;
   line-height: 1.6;
 }
 
+.footer-source a,
 .footer-filing a {
   color: var(--color-text-tertiary);
   text-decoration: none;
 }
 
+.footer-source a:hover,
+.footer-source a:focus-visible,
 .footer-filing a:hover,
 .footer-filing a:focus-visible {
   color: var(--color-text-secondary);

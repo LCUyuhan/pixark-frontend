@@ -2,8 +2,19 @@
   <div class="add-picture-batch-page">
     <a-card title="批量创建图片">
       <a-form layout="vertical" :model="formData" @finish="handleSubmit">
+        <a-form-item name="source" label="图片来源">
+          <a-select v-model:value="formData.source" style="width: 100%">
+            <a-select-option value="pixabay">Pixabay（推荐，无水印）</a-select-option>
+            <a-select-option value="pexels">Pexels（无水印，摄影质感好）</a-select-option>
+            <a-select-option value="bing">Bing（网页抓取，可能带水印）</a-select-option>
+          </a-select>
+        </a-form-item>
         <a-form-item name="searchText" label="关键词">
-          <a-input v-model:value="formData.searchText" placeholder="请输入搜索关键词" allow-clear />
+          <a-input
+            v-model:value="formData.searchText"
+            placeholder="建议使用英文关键词，命中率更高"
+            allow-clear
+          />
         </a-form-item>
         <a-form-item name="count" label="抓取数量">
           <a-input-number
@@ -40,6 +51,7 @@ const loading = ref(false)
 
 // 表单数据（对应后端 PictureUploadByBatchRequest）
 const formData = reactive<API.PictureUploadByBatchRequest>({
+  source: 'pixabay',
   count: 10,
 })
 
